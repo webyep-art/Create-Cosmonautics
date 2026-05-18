@@ -1,12 +1,10 @@
 plugins {
     id 'net.neoforged.moddev' version '1.0.1'
-    id 'io.github.goooler.shadow' version '8.1.8'
+    id 'com.gradleup.shadow' version '8.3.6'
 }
 
 configurations {
-    luajRuntime
     shade
-    implementation.extendsFrom(luajRuntime)
     implementation.extendsFrom(shade)
 }
 
@@ -66,19 +64,19 @@ neoForge {
         client {
             client()
             systemProperty 'neoforge.enabledGameTestNamespaces', 'rocketnautics'
-            additionalRuntimeClasspathConfiguration.extendsFrom(configurations.luajRuntime)
+            additionalRuntimeClasspathConfiguration.extendsFrom(configurations.shade)
         }
         server {
             server()
             programArgument '--nogui'
             systemProperty 'neoforge.enabledGameTestNamespaces', 'rocketnautics'
-            additionalRuntimeClasspathConfiguration.extendsFrom(configurations.luajRuntime)
+            additionalRuntimeClasspathConfiguration.extendsFrom(configurations.shade)
         }
 
         data {
             data()
             programArguments.addAll '--mod', project.name, '--all', '--output', file('src/generated/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath()
-            additionalRuntimeClasspathConfiguration.extendsFrom(configurations.luajRuntime)
+            additionalRuntimeClasspathConfiguration.extendsFrom(configurations.shade)
         }
     }
 
@@ -118,25 +116,7 @@ dependencies {
     compileOnly("cc.tweaked:cc-tweaked-${minecraft_version}-forge-api:${cc_version}")
     runtimeOnly("cc.tweaked:cc-tweaked-${minecraft_version}-forge:${cc_version}")
 
-    luajRuntime("org.luaj:luaj-jse:3.0.1")
     shade("org.luaj:luaj-jse:3.0.1")
-}
-
-jar {
-    archiveClassifier.set('dev')
-}
-
-shadowJar {
-    archiveClassifier.set('')
-    configurations = [project.configurations.shade]
-    relocate 'org.luaj', 'dev.devce.rocketnautics.shaded.luaj'
-    mergeServiceFiles()
-}
-
-tasks.named('jar') { finalizedBy shadowJar }
-
-artifacts {
-    archives shadowJar
 }
 
 sourceSets.main.resources { srcDir 'src/generated/resources' }
@@ -155,4 +135,19 @@ tasks.register('generateDummyArtifactManifest') {
 
 tasks.named('createMinecraftArtifacts') {
     dependsOn tasks.named('generateDummyArtifactManifest')
+}
+
+shadowJar {
+    archiveClassifier.set('')
+    configurations = [project.configurations.shade]
+    relocate 'org.luaj', 'dev.devce.rocketnautics.shaded.luaj'
+    mergeServiceFiles()
+}
+
+tasks.named('jar') {
+    finalizedBy('shadowJar')
+}
+
+artifacts {
+    archives shadowJar
 }

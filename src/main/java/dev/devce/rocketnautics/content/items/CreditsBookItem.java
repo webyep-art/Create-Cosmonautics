@@ -60,7 +60,7 @@ public class CreditsBookItem extends Item {
                             .append(Component.literal("Maintainer: ").withStyle(ChatFormatting.DARK_BLUE))
                             .append(Component.literal("web\n"))
                             .append(Component.literal("Contributor: ").withStyle(ChatFormatting.DARK_BLUE))
-                            .append(Component.literal("SSnowly, M_W_K, snusxd\n"))
+                            .append(Component.literal("SSnowly, M_W_K, snusxd, Sk4sBrawl\n"))
                             .append(Component.literal("Artist: ").withStyle(ChatFormatting.DARK_BLUE))
                             .append(Component.literal("LordAret, Mruranium\n"))
                             .append(Component.literal("Ideas: ").withStyle(ChatFormatting.DARK_GREEN))
