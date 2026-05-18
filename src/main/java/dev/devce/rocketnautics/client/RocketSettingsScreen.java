@@ -2,6 +2,7 @@ package dev.devce.rocketnautics.client;
 
 import dev.devce.rocketnautics.RocketConfig;
 import dev.devce.rocketnautics.RocketNautics;
+import dev.devce.rocketnautics.SkyDataHandler;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.CycleButton;
@@ -94,6 +95,10 @@ public class RocketSettingsScreen extends Screen {
             builder.addSlider("Shake Radius (m)", RocketConfig.CLIENT.shakeRadius.get(), 4.0, 32.0, val -> {
                 RocketConfig.CLIENT.shakeRadius.set(val);
                 RocketConfig.CLIENT.shakeRadius.save();
+            });
+            builder.addSlider("Maximum Planet Render Scale", RocketConfig.CLIENT.planetRenderMaximumScale.get(), SkyDataHandler.MIN_POWER_SIZE, 100, val -> {
+                RocketConfig.CLIENT.planetRenderMaximumScale.set(val.intValue());
+                RocketConfig.CLIENT.planetRenderMaximumScale.save();
             });
         });
     }

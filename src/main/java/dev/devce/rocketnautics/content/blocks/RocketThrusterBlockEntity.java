@@ -489,10 +489,8 @@ public class RocketThrusterBlockEntity extends SmartBlockEntity implements Block
             String fluidName = fuelTank.getFluid().isEmpty() ? "Empty"
                     : net.minecraft.core.registries.BuiltInRegistries.FLUID.getKey(fuelTank.getFluid().getFluid())
                             .toString();
-            dev.devce.rocketnautics.RocketNautics.LOGGER.info(
-                    "Engine at {}: Fluid={}, Amount={}mB, Drained={}mB, Valid={}",
-                    worldPosition, fluidName, fuelTank.getFluidAmount(), actuallyDrained,
-                    isRocketFuel(fuelTank.getFluid()));
+            dev.devce.rocketnautics.RocketNautics.LOGGER.info("Engine at {}: Fluid={}, Amount={}mB, Drained={}mB, Valid={}",
+                worldPosition, fluidName, fuelTank.getFluidAmount(), actuallyDrained, isRocketFuel(fuelTank.getFluid()));
         }
         */
 
@@ -607,6 +605,7 @@ public class RocketThrusterBlockEntity extends SmartBlockEntity implements Block
 
     private java.util.UUID uniqueId = java.util.UUID.randomUUID();
 
+    @Override
     public java.util.UUID getUniqueId() {
         return uniqueId;
     }

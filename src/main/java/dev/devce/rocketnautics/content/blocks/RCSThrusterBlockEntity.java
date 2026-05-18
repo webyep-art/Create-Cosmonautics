@@ -18,6 +18,10 @@ import org.joml.Vector3d;
 import java.util.List;
 
 public class RCSThrusterBlockEntity extends RocketThrusterBlockEntity {
+    @Override
+    public String getPeripheralType() {
+        return "rcs";
+    }
 
     public RCSThrusterBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
@@ -59,8 +63,8 @@ public class RCSThrusterBlockEntity extends RocketThrusterBlockEntity {
 
         double maxThrust = 105.0;
         double y = serverSubLevel.logicalPose().position().y;
-
-
+        
+        
         if (y < 5000) {
             if (y <= 2000) {
                 maxThrust = 12.0;
@@ -74,7 +78,7 @@ public class RCSThrusterBlockEntity extends RocketThrusterBlockEntity {
 
         Direction facing = getThrustDirection();
         Direction pushDirection = facing.getOpposite();
-
+        
         Vector3d thrustVector = new Vector3d(
                 pushDirection.getStepX() * currentThrust,
                 pushDirection.getStepY() * currentThrust,
@@ -100,28 +104,28 @@ public class RCSThrusterBlockEntity extends RocketThrusterBlockEntity {
         }
 
         blockEntity.tick();
-
+        
         if (level.isClientSide()) {
             if (active) {
                 Direction nozzle = blockEntity.getThrustDirection();
                 Vector3d pDir = new Vector3d(nozzle.getStepX(), nozzle.getStepY(), nozzle.getStepZ());
-
+                
                 double x = pos.getX() + 0.5 + pDir.x() * 0.55;
                 double y = pos.getY() + 0.5 + pDir.y() * 0.55;
                 double z = pos.getZ() + 0.5 + pDir.z() * 0.55;
 
                 RandomSource random = level.getRandom();
-
+                
                 for (int i = 0; i < 2; i++) {
                     double speedX = pDir.x() * (0.3 + random.nextDouble() * 0.2) + (random.nextDouble() - 0.5) * 0.05;
                     double speedY = pDir.y() * (0.3 + random.nextDouble() * 0.2) + (random.nextDouble() - 0.5) * 0.05;
                     double speedZ = pDir.z() * (0.3 + random.nextDouble() * 0.2) + (random.nextDouble() - 0.5) * 0.05;
-
+                    
                     level.addParticle(RocketParticles.RCS_GAS.get(), x, y, z, speedX, speedY, speedZ);
                 }
             }
         }
-
+        
         if (active) {
             if (blockEntity.ignitionTicks < 10) blockEntity.ignitionTicks++;
         } else {

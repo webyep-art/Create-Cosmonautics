@@ -81,6 +81,13 @@ public class RocketBlocks {
             .build()
             .register();
 
+    public static final BlockEntry<HologramTableBlock> HOLOGRAM_TABLE = REGISTRATE.block("hologram_block", HologramTableBlock::new)
+            .initialProperties(() -> Blocks.IRON_BLOCK)
+            .transform(pickaxeOnly())
+            .item(RocketBlockItem::new)
+            .build()
+            .register();
+
     static { REGISTRATE.setCreativeTab(RocketTabs.WORLD_TAB); }
 
     public static final BlockEntry<Block> TITANIUM_ORE = REGISTRATE.block("titanium_ore", Block::new)

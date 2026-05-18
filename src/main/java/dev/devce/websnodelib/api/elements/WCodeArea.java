@@ -1,6 +1,11 @@
 package dev.devce.websnodelib.api.elements;
 
 import dev.devce.websnodelib.api.WElement;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Screen;
+import org.lwjgl.glfw.GLFW;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -50,9 +55,8 @@ public class WCodeArea extends WElement {
     // -----------------------------------------------------------
 
     @Override
-    @net.neoforged.api.distmarker.OnlyIn(net.neoforged.api.distmarker.Dist.CLIENT)
-    public void render(net.minecraft.client.gui.GuiGraphics graphics, int x, int y, int mouseX, int mouseY, float partialTick) {
-        var font = net.minecraft.client.Minecraft.getInstance().font;
+    public void render(GuiGraphics graphics, int x, int y, int mouseX, int mouseY, float partialTick) {
+        var font = Minecraft.getInstance().font;
         int fontH = font.lineHeight + 1;
         int visibleLines = (height - 4) / fontH;
 
@@ -108,8 +112,7 @@ public class WCodeArea extends WElement {
         }
     }
 
-    @net.neoforged.api.distmarker.OnlyIn(net.neoforged.api.distmarker.Dist.CLIENT)
-    private void renderSelectionForLine(net.minecraft.client.gui.Font font, net.minecraft.client.gui.GuiGraphics graphics, int lineIdx, int startX, int startY, int fontH) {
+    private void renderSelectionForLine(net.minecraft.client.gui.Font font, GuiGraphics graphics, int lineIdx, int startX, int startY, int fontH) {
         int sY = selectionStartY, sX = selectionStartX, eY = cursorY, eX = cursorX;
         if (sY > eY || (sY == eY && sX > eX)) {
             int ty = sY; sY = eY; eY = ty;
@@ -149,8 +152,7 @@ public class WCodeArea extends WElement {
     }
 
     /** Render one line with Lua syntax highlighting token-by-token. */
-    @net.neoforged.api.distmarker.OnlyIn(net.neoforged.api.distmarker.Dist.CLIENT)
-    private void renderHighlightedLine(net.minecraft.client.gui.Font font, net.minecraft.client.gui.GuiGraphics graphics, String line, int x, int y) {
+    private void renderHighlightedLine(net.minecraft.client.gui.Font font, GuiGraphics graphics, String line, int x, int y) {
         int i = 0;
         int curX = x;
 
@@ -232,7 +234,7 @@ public class WCodeArea extends WElement {
         focused = wasInside;
         if (!focused) return false;
 
-        var font = net.minecraft.client.Minecraft.getInstance().font;
+        var font = Minecraft.getInstance().font;
         int fontH = font.lineHeight + 1;
         int gutterW = 22;
 
@@ -249,7 +251,7 @@ public class WCodeArea extends WElement {
         }
         cursorX = cx;
 
-        if (net.minecraft.client.gui.screens.Screen.hasShiftDown()) {
+        if (Screen.hasShiftDown()) {
             startSelection();
         } else {
             clearSelection();
@@ -261,7 +263,7 @@ public class WCodeArea extends WElement {
     @Override
     public boolean handleMouseDrag(double localX, double localY, int button, double dragX, double dragY) {
         if (!isSelectingMouse) return false;
-        var font = net.minecraft.client.Minecraft.getInstance().font;
+        var font = Minecraft.getInstance().font;
         int fontH = font.lineHeight + 1;
         int gutterW = 22;
 
@@ -291,14 +293,14 @@ public class WCodeArea extends WElement {
     public boolean handleKeyPress(int keyCode, int scanCode, int modifiers) {
         if (!focused) return false;
 
-        boolean shift = (modifiers & org.lwjgl.glfw.GLFW.GLFW_MOD_SHIFT) != 0;
-        boolean ctrl = (modifiers & org.lwjgl.glfw.GLFW.GLFW_MOD_CONTROL) != 0;
+        boolean shift = (modifiers & GLFW.GLFW_MOD_SHIFT) != 0;
+        boolean ctrl = (modifiers & GLFW.GLFW_MOD_CONTROL) != 0;
 
         if (ctrl) {
-            if (keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_C) { copySelection(); return true; }
-            if (keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_V) { pasteFromClipboard(); return true; }
-            if (keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_X) { cutSelection(); return true; }
-            if (keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_A) { selectAll(); return true; }
+            if (keyCode == GLFW.GLFW_KEY_C) { copySelection(); return true; }
+            if (keyCode == GLFW.GLFW_KEY_V) { pasteFromClipboard(); return true; }
+            if (keyCode == GLFW.GLFW_KEY_X) { cutSelection(); return true; }
+            if (keyCode == GLFW.GLFW_KEY_A) { selectAll(); return true; }
         }
 
         if (shift && isNavKey(keyCode)) {
@@ -308,7 +310,7 @@ public class WCodeArea extends WElement {
         }
 
         switch (keyCode) {
-            case org.lwjgl.glfw.GLFW.GLFW_KEY_ENTER -> {
+            case GLFW.GLFW_KEY_ENTER -> {
                 if (hasSelection()) deleteSelection();
                 String cur = lines.get(cursorY);
                 int indent = 0;
@@ -320,13 +322,13 @@ public class WCodeArea extends WElement {
                 cursorX = indent;
                 ensureCursorVisible();
             }
-            case org.lwjgl.glfw.GLFW.GLFW_KEY_TAB -> {
+            case GLFW.GLFW_KEY_TAB -> {
                 if (hasSelection()) deleteSelection();
                 String cur = lines.get(cursorY);
                 lines.set(cursorY, cur.substring(0, cursorX) + "  " + cur.substring(cursorX));
                 cursorX += 2;
             }
-            case org.lwjgl.glfw.GLFW.GLFW_KEY_BACKSPACE -> {
+            case GLFW.GLFW_KEY_BACKSPACE -> {
                 if (hasSelection()) { deleteSelection(); return true; }
                 if (cursorX > 0) {
                     String cur = lines.get(cursorY);
@@ -341,7 +343,7 @@ public class WCodeArea extends WElement {
                 }
                 ensureCursorVisible();
             }
-            case org.lwjgl.glfw.GLFW.GLFW_KEY_DELETE -> {
+            case GLFW.GLFW_KEY_DELETE -> {
                 if (hasSelection()) { deleteSelection(); return true; }
                 String cur = lines.get(cursorY);
                 if (cursorX < cur.length()) {
@@ -351,34 +353,34 @@ public class WCodeArea extends WElement {
                     lines.remove(cursorY + 1);
                 }
             }
-            case org.lwjgl.glfw.GLFW.GLFW_KEY_LEFT -> {
+            case GLFW.GLFW_KEY_LEFT -> {
                 if (cursorX > 0) cursorX--;
                 else if (cursorY > 0) { cursorY--; cursorX = lines.get(cursorY).length(); }
                 ensureCursorVisible();
             }
-            case org.lwjgl.glfw.GLFW.GLFW_KEY_RIGHT -> {
+            case GLFW.GLFW_KEY_RIGHT -> {
                 if (cursorX < lines.get(cursorY).length()) cursorX++;
                 else if (cursorY < lines.size() - 1) { cursorY++; cursorX = 0; }
                 ensureCursorVisible();
             }
-            case org.lwjgl.glfw.GLFW.GLFW_KEY_UP -> {
+            case GLFW.GLFW_KEY_UP -> {
                 if (cursorY > 0) { cursorY--; cursorX = Math.min(cursorX, lines.get(cursorY).length()); }
                 ensureCursorVisible();
             }
-            case org.lwjgl.glfw.GLFW.GLFW_KEY_DOWN -> {
+            case GLFW.GLFW_KEY_DOWN -> {
                 if (cursorY < lines.size() - 1) { cursorY++; cursorX = Math.min(cursorX, lines.get(cursorY).length()); }
                 ensureCursorVisible();
             }
-            case org.lwjgl.glfw.GLFW.GLFW_KEY_HOME -> cursorX = 0;
-            case org.lwjgl.glfw.GLFW.GLFW_KEY_END  -> cursorX = lines.get(cursorY).length();
-            case org.lwjgl.glfw.GLFW.GLFW_KEY_ESCAPE -> focused = false;
+            case GLFW.GLFW_KEY_HOME -> cursorX = 0;
+            case GLFW.GLFW_KEY_END  -> cursorX = lines.get(cursorY).length();
+            case GLFW.GLFW_KEY_ESCAPE -> focused = false;
             default -> { /* consumed */ }
         }
         return true;
     }
 
     private boolean isNavKey(int key) {
-        return key == org.lwjgl.glfw.GLFW.GLFW_KEY_UP || key == org.lwjgl.glfw.GLFW.GLFW_KEY_DOWN || key == org.lwjgl.glfw.GLFW.GLFW_KEY_LEFT || key == org.lwjgl.glfw.GLFW.GLFW_KEY_RIGHT || key == org.lwjgl.glfw.GLFW.GLFW_KEY_HOME || key == org.lwjgl.glfw.GLFW.GLFW_KEY_END || key == org.lwjgl.glfw.GLFW.GLFW_KEY_PAGE_UP || key == org.lwjgl.glfw.GLFW.GLFW_KEY_PAGE_DOWN;
+        return key == GLFW.GLFW_KEY_UP || key == GLFW.GLFW_KEY_DOWN || key == GLFW.GLFW_KEY_LEFT || key == GLFW.GLFW_KEY_RIGHT || key == GLFW.GLFW_KEY_HOME || key == GLFW.GLFW_KEY_END || key == GLFW.GLFW_KEY_PAGE_UP || key == GLFW.GLFW_KEY_PAGE_DOWN;
     }
 
     private void selectAll() {
@@ -388,10 +390,9 @@ public class WCodeArea extends WElement {
         cursorX = lines.get(cursorY).length();
     }
 
-    @net.neoforged.api.distmarker.OnlyIn(net.neoforged.api.distmarker.Dist.CLIENT)
     private void copySelection() {
         if (!hasSelection()) return;
-        net.minecraft.client.Minecraft.getInstance().keyboardHandler.setClipboard(getSelectedText());
+        Minecraft.getInstance().keyboardHandler.setClipboard(getSelectedText());
     }
 
     private void cutSelection() {
@@ -423,10 +424,9 @@ public class WCodeArea extends WElement {
         clearSelection();
     }
 
-    @net.neoforged.api.distmarker.OnlyIn(net.neoforged.api.distmarker.Dist.CLIENT)
     private void pasteFromClipboard() {
         if (hasSelection()) deleteSelection();
-        String text = net.minecraft.client.Minecraft.getInstance().keyboardHandler.getClipboard();
+        String text = Minecraft.getInstance().keyboardHandler.getClipboard();
         if (text == null || text.isEmpty()) return;
 
         String[] parts = text.replace("\r", "").split("\n", -1);
@@ -479,18 +479,16 @@ public class WCodeArea extends WElement {
     }
 
     // Mouse scroll for code area
-    @net.neoforged.api.distmarker.OnlyIn(net.neoforged.api.distmarker.Dist.CLIENT)
     public boolean handleMouseScrolled(double localX, double localY, double delta) {
         if (localX < 0 || localX > width || localY < 0 || localY > height) return false;
-        int fontH = net.minecraft.client.Minecraft.getInstance().font.lineHeight + 1;
+        int fontH = Minecraft.getInstance().font.lineHeight + 1;
         int visibleLines = (height - 4) / fontH;
         scrollOffset = Math.max(0, Math.min(scrollOffset - (int) delta, Math.max(0, lines.size() - visibleLines)));
         return true;
     }
 
-    @net.neoforged.api.distmarker.OnlyIn(net.neoforged.api.distmarker.Dist.CLIENT)
     private void ensureCursorVisible() {
-        int fontH = net.minecraft.client.Minecraft.getInstance().font.lineHeight + 1;
+        int fontH = Minecraft.getInstance().font.lineHeight + 1;
         int visibleLines = (height - 4) / fontH;
         if (cursorY < scrollOffset) scrollOffset = cursorY;
         if (cursorY >= scrollOffset + visibleLines) scrollOffset = cursorY - visibleLines + 1;

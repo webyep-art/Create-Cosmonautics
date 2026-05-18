@@ -2,11 +2,11 @@ package dev.devce.rocketnautics;
 
 import com.mojang.logging.LogUtils;
 import com.tterrag.registrate.util.nullness.NonNullSupplier;
-import dev.devce.rocketnautics.compat.computercraft.ComputerCraftCompat;
 import dev.devce.rocketnautics.content.blocks.LinkedSignalHandler;
 import dev.devce.rocketnautics.content.commands.GravityCommand;
 import dev.devce.rocketnautics.content.commands.JetpackCommand;
 import dev.devce.rocketnautics.content.commands.ShipCopyPasteCommand;
+import dev.devce.rocketnautics.content.commands.TimescaleCommand;
 import dev.devce.rocketnautics.content.physics.GlobalSpacePhysicsHandler;
 import dev.devce.rocketnautics.data.RocketDatagen;
 import dev.devce.rocketnautics.network.NetworkHandler;
@@ -17,7 +17,6 @@ import net.minecraft.world.item.CreativeModeTab;
 import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.ModList;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.config.ModConfig;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
@@ -30,7 +29,7 @@ import org.slf4j.Logger;
 
 /**
  * Main class for the Cosmonautics (RocketNautics) mod.
- * This class handles mod initialization, configuration registration,
+ * This class handles mod initialization, configuration registration, 
  * and various system setups for physics, commands, and registry.
  */
 @Mod(RocketNautics.MODID)
@@ -44,13 +43,13 @@ public class RocketNautics {
             (RocketRegistrate) new RocketRegistrate(path(MODID), MODID).defaultCreativeTab((ResourceKey<CreativeModeTab>) null));
     /**
      * Constructor for the mod. Performs initial registration of configs, blocks, and handlers.
-     *
+     * 
      * @param modEventBus The event bus for mod-specific events.
      * @param modContainer The container for this mod instance.
      */
     public RocketNautics(IEventBus modEventBus, net.neoforged.fml.ModContainer modContainer) {
         LOGGER.info("Initializing Cosmonautics!");
-
+        
         // Register mod configurations
         modContainer.registerConfig(ModConfig.Type.SERVER, (net.neoforged.fml.config.IConfigSpec) RocketConfig.SERVER_SPEC);
         modContainer.registerConfig(ModConfig.Type.CLIENT, (net.neoforged.fml.config.IConfigSpec) RocketConfig.CLIENT_SPEC);
@@ -88,14 +87,11 @@ public class RocketNautics {
 
         modEventBus.addListener(this::setup);
         NeoForge.EVENT_BUS.register(this);
-
+        
         // Initialize physics and game mechanics handlers
         GlobalSpacePhysicsHandler.init();
         dev.devce.rocketnautics.content.physics.AsteroidSpawner.init();
         dev.devce.rocketnautics.content.physics.SpaceTransitionHandler.init();
-
-        if (ModList.get().isLoaded("computercraft"))
-            ComputerCraftCompat.init();
     }
 
     public static ResourceLocation path(final String path) {
@@ -133,6 +129,7 @@ public class RocketNautics {
         JetpackCommand.register(event.getDispatcher());
         dev.devce.rocketnautics.content.commands.AsteroidCommand.register(event.getDispatcher());
         dev.devce.rocketnautics.content.commands.BreakBarrierCommand.register(event.getDispatcher());
+        TimescaleCommand.register(event.getDispatcher());
     }
     @SubscribeEvent
     public void onLevelTick(LevelTickEvent.Post event) {

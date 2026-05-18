@@ -1,10 +1,13 @@
 plugins {
     id 'net.neoforged.moddev' version '1.0.1'
+    id 'io.github.goooler.shadow' version '8.1.8'
 }
 
 configurations {
     luajRuntime
+    shade
     implementation.extendsFrom(luajRuntime)
+    implementation.extendsFrom(shade)
 }
 
 repositories {
@@ -47,7 +50,7 @@ repositories {
     }
 }
 
-version = '1.3.8rc5'
+version = '1.3.8'
 group = 'dev.devce.rocketnautics'
 
 base {
@@ -92,6 +95,7 @@ dependencies {
     implementation("net.createmod.ponder:ponder-neoforge:${ponder_version}+mc${minecraft_version}")
     compileOnly("dev.engine-room.flywheel:flywheel-neoforge-api-${minecraft_version}:${flywheel_version}")
     implementation("dev.engine-room.flywheel:flywheel-neoforge-${minecraft_version}:${flywheel_version}")
+
     jarJar(api("com.tterrag.registrate:Registrate:$registrate_version"))
 
     compileOnly("dev.ryanhcode.sable:sable-common-${minecraft_version}:${sable_version}")
@@ -104,25 +108,99 @@ dependencies {
     implementation("dev.simulated_team.simulated:simulated-neoforge-${minecraft_version}:${simulated_version}") { transitive = false }
     implementation("dev.eriksonn.aeronautics:aeronautics-neoforge-${minecraft_version}:${aeronautics_version}") { transitive = false }
 
-    
     compileOnly("mezz.jei:jei-1.21.1-common-api:${jei_version}")
     compileOnly("mezz.jei:jei-1.21.1-neoforge-api:${jei_version}")
     runtimeOnly("mezz.jei:jei-1.21.1-neoforge:${jei_version}")
     
     implementation "curse.maven:jade-324717:6738687"
 
-    
     compileOnly("cc.tweaked:cc-tweaked-${minecraft_version}-forge-api:${cc_version}")
     runtimeOnly("cc.tweaked:cc-tweaked-${minecraft_version}-forge:${cc_version}")
 
     luajRuntime("org.luaj:luaj-jse:3.0.1")
-    jarJar("org.luaj:luaj-jse:3.0.1")
+    shade("org.luaj:luaj-jse:3.0.1")
+
+    shade('org.orekit:orekit') {
+        version {
+            strictly '[13.1.4,)'
+            prefer '13.1.4'
+        }
+    }
 }
+
+jar {
+    // Intermediate artifact. Contains compiled classes + jarJar nested deps.
+    // Shadow reads the compiled classes from sourceSets.main.output (not this file),
+    // so the jarJar content won't accidentally flow through Shadow's pipeline.
+    archiveClassifier.set('pre-shadow')
+}
+
+shadowJar {
+    archiveClassifier.set('')
+    dependsOn jar
+
+    // Embed and relocate LuaJ. Shadow rewrites org.luaj.* in every .class file,
+    // so WLuaEditorScreen and RocketNodes update automatically — no source changes.
+    configurations = [project.configurations.shade]
+    relocate 'org.luaj', 'dev.devce.rocketnautics.shaded.luaj'
+    relocate 'org.orekit', 'dev.devce.rocketnautics.shaded.orekit'
+
+    mergeServiceFiles()
+
+    doLast {
+        // ── Raw zip injection of jarJar nested deps ───────────────────────────
+        // We copy META-INF/jarjar/** from the pre-shadow jar into the finished
+        // shadow jar using Java's ZipInputStream / ZipOutputStream directly.
+        // Shadow never sees these bytes, so it cannot corrupt them.
+        def shadowOut  = archiveFile.get().asFile
+        def preShadow  = tasks.named('jar').get().archiveFile.get().asFile
+        def tmp        = new File(shadowOut.parentFile, shadowOut.name + '.tmp')
+
+        shadowOut.renameTo(tmp)
+
+        shadowOut.withOutputStream { rawOut ->
+            def zout = new java.util.zip.ZipOutputStream(rawOut)
+
+            // 1. Copy every entry from the finished shadow jar.
+            new java.util.zip.ZipFile(tmp).withCloseable { zin ->
+                zin.entries().each { entry ->
+                    zout.putNextEntry(new java.util.zip.ZipEntry(entry.name))
+                    if (!entry.directory) zin.getInputStream(entry).transferTo(zout)
+                    zout.closeEntry()
+                }
+            }
+
+            // 2. Append jarJar entries from the pre-shadow jar as raw bytes.
+            //    transferTo() copies the exact bytes — no zip processing whatsoever.
+            new java.util.zip.ZipFile(preShadow).withCloseable { zin ->
+                zin.entries()
+                   .findAll { it.name.startsWith('META-INF/jarjar/') }
+                   .each { entry ->
+                       zout.putNextEntry(new java.util.zip.ZipEntry(entry.name))
+                       if (!entry.directory) zin.getInputStream(entry).transferTo(zout)
+                       zout.closeEntry()
+                   }
+            }
+
+            zout.finish()
+        }
+
+        tmp.delete()
+        logger.lifecycle("Injected jarJar nested deps into ${shadowOut.name}")
+    }
+}
+
+tasks.named('jar') { finalizedBy shadowJar }
+
+artifacts {
+    archives shadowJar
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 
 sourceSets.main.resources { srcDir 'src/generated/resources' }
 
 // --- Fix for CreateMinecraftArtifacts missing manifest ---
-// Generates an empty manifest file expected by the NeoForge moddev plugin.
 tasks.register('generateDummyArtifactManifest') {
     doLast {
         def manifestFile = file("${buildDir}/moddev/nfrt_artifact_manifest.properties")

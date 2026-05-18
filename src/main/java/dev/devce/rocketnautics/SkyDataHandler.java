@@ -2,6 +2,7 @@
 
 package dev.devce.rocketnautics;
 
+import dev.devce.rocketnautics.client.PlanetColors;
 import dev.devce.rocketnautics.content.physics.SpaceTransitionHandler;
 import dev.devce.rocketnautics.network.PlanetMapPayload;
 import it.unimi.dsi.fastutil.doubles.DoubleObjectPair;
@@ -31,10 +32,6 @@ public class SkyDataHandler {
     
     public static final Map<ResourceKey<Level>, DoubleObjectPair<ResourceKey<Level>>> OVERRIDES = new HashMap<>();
 
-    static {
-        OVERRIDES.put(SpaceTransitionHandler.SPACE_DIM, DoubleObjectPair.of(SpaceTransitionHandler.OVERWORLD_SPACE_Y, Level.OVERWORLD));
-    }
-
     public final ServerLevel level;
     protected final RecursiveDataSquare root;
 
@@ -57,6 +54,19 @@ public class SkyDataHandler {
             level = level.getServer().getLevel(OVERRIDES.get(level.dimension()).right());
         }
         return HANDLERS.computeIfAbsent(level, SkyDataHandler::new);
+    }
+
+    public byte[] getRenderDataForDeepSpace(int powerSizeClamp) {
+        // we can render the root at this point
+        DataSquare square = root;
+        while (powerSizeClamp < square.powerSize) {
+            if (square instanceof RecursiveDataSquare r) {
+                square = r.getChildAtTruePosition(0, 0);
+            } else {
+                break;
+            }
+        }
+        return square.getRenderData();
     }
 
     public PlanetMapPayload getRenderDataAtScaleAndPosition(int powerSize, int trueX, int trueZ) {
@@ -223,21 +233,6 @@ public class SkyDataHandler {
             return trueZ - trueNegZCorner >= toTrueSize(powerSize - 1);
         }
 
-        protected byte biomeToData(Holder<Biome> biome) {
-            byte colorIdx = 4; 
-            if (biome.is(BiomeTags.IS_OCEAN) || biome.is(BiomeTags.IS_DEEP_OCEAN)) colorIdx = 0;
-            else if (biome.is(BiomeTags.IS_RIVER)) colorIdx = 1;
-            else if (biome.is(BiomeTags.IS_BEACH)) colorIdx = 2;
-            else if (biome.is(BiomeTags.HAS_DESERT_PYRAMID)) colorIdx = 3;
-            else if (biome.is(BiomeTags.IS_FOREST)) colorIdx = 5;
-            else if (biome.is(BiomeTags.IS_JUNGLE)) colorIdx = 6;
-            else if (biome.is(BiomeTags.IS_TAIGA)) colorIdx = 7;
-            else if (biome.is(BiomeTags.HAS_VILLAGE_SNOWY)) colorIdx = 8;
-            else if (biome.is(BiomeTags.IS_BADLANDS)) colorIdx = 9;
-            else if (biome.is(BiomeTags.IS_MOUNTAIN)) colorIdx = 10;
-            return colorIdx;
-        }
-
         protected void buildRenderData() {
             renderData = new byte[256 * 256];
             try {
@@ -250,9 +245,9 @@ public class SkyDataHandler {
                     for (int z = 0; z < 256; z++) {
                         int worldX = trueNegXCorner + x * step;
                         int worldZ = trueNegZCorner + z * step;
-
-                        Holder<Biome> biome = source.getNoiseBiome(worldX >> 2, 64 >> 2, worldZ >> 2, sampler);
-                        renderData[x + z * 256] = biomeToData(biome);
+                        // use some arbitrarily large value as our y picker so we don't get underground biomes
+                        Holder<Biome> biome = source.getNoiseBiome(worldX >> 2, 1000, worldZ >> 2, sampler);
+                        renderData[x + z * 256] = PlanetColors.getBiomeColor(biome);
                     }
                 }
             } catch (Exception e) {

@@ -61,13 +61,10 @@ public final class RocketStandardRecipeGen extends BaseRecipeProvider {
             .rewardXP(1)
             .inBlastFurnace();
 
-
     GeneratedRecipe SMELT_TITANIUM_RAW = create(TITANIUM_INGOT).withSuffix("_from_raw_ore")
             .viaCookingTag(MetalTags.TITANIUM::rawOres)
             .rewardXP(.7f)
             .inBlastFurnace();
-
-    GeneratedRecipe SMELT_TITANIUM_CRUSHED = blastCrushedMetal(TITANIUM_INGOT, CRUSHED_TITANIUM);
 
     private Marker EQUIPMENT = enterFolder("equipment");
 

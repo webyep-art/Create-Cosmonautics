@@ -29,7 +29,7 @@ public class SputnikBlockEntity extends BlockEntity {
     private boolean isForced = false;
     private ChunkPos lastForcedParentChunk = null;
     private ServerLevel lastForcedParentLevel = null;
-
+    
     private final List<IPeripheral> discoveredPeripherals = new ArrayList<>();
     private int scanCooldown = 0;
 
@@ -41,7 +41,7 @@ public class SputnikBlockEntity extends BlockEntity {
             setChanged();
         }
     };
-
+    
     // Conditions: 0 = Disabled, 1 = Altitude >, 2 = Altitude <, 3 = Velocity >, 4 = Velocity <, 5 = Time
     public final int[] stageConditions = new int[5];
     public final double[] stageValues = new double[5];
@@ -52,16 +52,6 @@ public class SputnikBlockEntity extends BlockEntity {
     public SputnikBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
         graph.setContext(this);
-        if (level != null) graph.setRegistries(level.registryAccess());
-    }
-
-    @Override
-    public void setLevel(Level level) {
-        super.setLevel(level);
-        if (level != null) {
-            graph.setRegistries(level.registryAccess());
-            graph.setContext(this);
-        }
     }
 
     private SubLevel getSubLevel() {
@@ -91,9 +81,11 @@ public class SputnikBlockEntity extends BlockEntity {
     private void tickNodes() {
         dev.devce.rocketnautics.content.blocks.LinkedSignalHandler.tick(level);
         graph.tick();
-
-        // Removed aggressive periodic sync to prevent "snap back" during editing
-        // The graph will sync when the UI is closed or when structural changes occur
+        
+        // Sync graph values to client periodically for UI display
+        if (level.getGameTime() % 5 == 0) {
+            level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
+        }
     }
 
     private final List<UUID> peripheralIds = new ArrayList<>();
@@ -101,7 +93,7 @@ public class SputnikBlockEntity extends BlockEntity {
     public void refreshPeripherals() {
         Map<UUID, IPeripheral> found = new java.util.HashMap<>();
         SubLevel sl = getSubLevel();
-
+        
         if (sl != null) {
             net.minecraft.world.level.ChunkPos min = sl.getPlot().getChunkMin();
             net.minecraft.world.level.ChunkPos max = sl.getPlot().getChunkMax();
@@ -149,8 +141,8 @@ public class SputnikBlockEntity extends BlockEntity {
     }
 
     public int getEngineCount() { return discoveredPeripherals.size(); }
-    public net.minecraft.core.BlockPos getEnginePos(int i) {
-        return (i >= 0 && i < discoveredPeripherals.size()) ? discoveredPeripherals.get(i).getBlockPos() : null;
+    public net.minecraft.core.BlockPos getEnginePos(int i) { 
+        return (i >= 0 && i < discoveredPeripherals.size()) ? discoveredPeripherals.get(i).getBlockPos() : null; 
     }
     public double getEngineThrust(int i) {
         return (i >= 0 && i < discoveredPeripherals.size()) ? discoveredPeripherals.get(i).readValue("thrust") : 0;
@@ -184,7 +176,7 @@ public class SputnikBlockEntity extends BlockEntity {
     public double getPitch() {
         SubLevel subLevel = getSubLevel();
         if (subLevel != null) {
-            Vector3d euler = subLevel.logicalPose().orientation().getEulerAnglesYXZ(new Vector3d());
+            Vector3d euler = subLevel.logicalPose().orientation().getEulerAnglesXYZ(new Vector3d());
             return Math.toDegrees(euler.x);
         }
         return 0;
@@ -197,7 +189,7 @@ public class SputnikBlockEntity extends BlockEntity {
     public double getYaw() {
         SubLevel subLevel = getSubLevel();
         if (subLevel != null) {
-            Vector3d euler = subLevel.logicalPose().orientation().getEulerAnglesYXZ(new Vector3d());
+            Vector3d euler = subLevel.logicalPose().orientation().getEulerAnglesXYZ(new Vector3d());
             return Math.toDegrees(euler.y);
         }
         return 0;
@@ -206,7 +198,7 @@ public class SputnikBlockEntity extends BlockEntity {
     public double getRoll() {
         SubLevel subLevel = getSubLevel();
         if (subLevel != null) {
-            Vector3d euler = subLevel.logicalPose().orientation().getEulerAnglesYXZ(new Vector3d());
+            Vector3d euler = subLevel.logicalPose().orientation().getEulerAnglesXYZ(new Vector3d());
             return Math.toDegrees(euler.z);
         }
         return 0;
@@ -263,12 +255,12 @@ public class SputnikBlockEntity extends BlockEntity {
             if (parent != null) {
                 Vector3d globalPos = serverSubLevel.logicalPose().position();
                 ChunkPos currentParentChunk = new ChunkPos(BlockPos.containing(globalPos.x, globalPos.y, globalPos.z));
-
+                
                 if (lastForcedParentChunk == null || !lastForcedParentChunk.equals(currentParentChunk) || lastForcedParentLevel != parent) {
                     if (lastForcedParentChunk != null && lastForcedParentLevel != null) {
                         lastForcedParentLevel.setChunkForced(lastForcedParentChunk.x, lastForcedParentChunk.z, false);
                     }
-
+                    
                     parent.setChunkForced(currentParentChunk.x, currentParentChunk.z, true);
                     lastForcedParentChunk = currentParentChunk;
                     lastForcedParentLevel = parent;
@@ -312,7 +304,7 @@ public class SputnikBlockEntity extends BlockEntity {
     public Biome getGlobalBiome() {
         if (level == null) return null;
         var subLevel = dev.ryanhcode.sable.Sable.HELPER.getContaining(level, worldPosition);
-
+        
         if (subLevel != null && !level.isClientSide) {
             Vector3d global = getGlobalPos();
             ServerLevel parent = getParentLevel((ServerSubLevel) subLevel);
@@ -320,7 +312,7 @@ public class SputnikBlockEntity extends BlockEntity {
                 return parent.getBiome(BlockPos.containing(global.x, 64, global.z)).value();
             }
         }
-
+        
         return level.getBiome(worldPosition).value();
     }
 
@@ -373,7 +365,7 @@ public class SputnikBlockEntity extends BlockEntity {
         super.saveAdditional(tag, registries);
         tag.putBoolean("Forced", isForced);
         tag.put("NodeGraph", graph.save());
-
+        
         net.minecraft.nbt.ListTag pIds = new net.minecraft.nbt.ListTag();
         for (UUID id : peripheralIds) {
             pIds.add(net.minecraft.nbt.NbtUtils.createUUID(id));
@@ -382,7 +374,7 @@ public class SputnikBlockEntity extends BlockEntity {
 
         tag.put("StageFrequencies", stageFrequencies.serializeNBT(registries));
         tag.putIntArray("StageConditions", stageConditions);
-
+        
         CompoundTag valuesTag = new CompoundTag();
         for(int i=0; i<5; i++) {
             valuesTag.putDouble("v"+i, stageValues[i]);
@@ -417,7 +409,6 @@ public class SputnikBlockEntity extends BlockEntity {
         if (tag.contains("NodeGraph")) {
             CompoundTag graphTag = tag.getCompound("NodeGraph");
             // Merging load handles both full load and periodic sync without wiping state
-            graph.setRegistries(registries);
             graph.load(graphTag);
             graph.setContext(this);
         }

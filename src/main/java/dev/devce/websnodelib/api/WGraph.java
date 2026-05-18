@@ -127,16 +127,6 @@ public class WGraph {
         return context;
     }
 
-    private net.minecraft.core.HolderLookup.Provider registries;
-
-    public void setRegistries(net.minecraft.core.HolderLookup.Provider registries) {
-        this.registries = registries;
-    }
-
-    public net.minecraft.core.HolderLookup.Provider getRegistries() {
-        return registries;
-    }
-
     /**
      * Performs one logical step of the graph simulation.
      * 1. Propagates values across all connections.

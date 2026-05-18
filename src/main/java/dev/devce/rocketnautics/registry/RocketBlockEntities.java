@@ -2,6 +2,8 @@ package dev.devce.rocketnautics.registry;
 
 import com.tterrag.registrate.util.entry.BlockEntityEntry;
 import dev.devce.rocketnautics.RocketNautics;
+import dev.devce.rocketnautics.client.render.HologramTableRenderer;
+import dev.devce.rocketnautics.client.render.VectorThrusterRenderer;
 import dev.devce.rocketnautics.content.blocks.*;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.capabilities.Capabilities;
@@ -36,6 +38,12 @@ public class RocketBlockEntities {
             .validBlocks(RocketBlocks.SPUTNIK)
             .register();
 
+    public static final BlockEntityEntry<HologramTableBlockEntity> HOLOGRAM_TABLE = REGISTRATE
+            .blockEntity("hologram_table", HologramTableBlockEntity::new)
+            .validBlocks(RocketBlocks.HOLOGRAM_TABLE)
+            .renderer(() -> HologramTableRenderer::new)
+            .register();
+
     public static void register(IEventBus eventBus) {
         eventBus.addListener(RocketBlockEntities::registerCapabilities);
     }
@@ -44,7 +52,7 @@ public class RocketBlockEntities {
         event.registerBlockEntity(Capabilities.FluidHandler.BLOCK, ROCKET_THRUSTER.get(), (be, side) -> be.fuelTank);
         event.registerBlockEntity(Capabilities.FluidHandler.BLOCK, VECTOR_THRUSTER.get(), (be, side) -> be.fuelTank);
 
-        
+
         if (net.neoforged.fml.ModList.get().isLoaded("computercraft")) {
             dev.devce.rocketnautics.compat.computercraft.ComputerCraftCompat.registerCapabilities(event);
         }

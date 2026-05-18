@@ -2,8 +2,12 @@ package dev.devce.rocketnautics.network;
 
 import dev.devce.rocketnautics.RocketNautics;
 import dev.devce.rocketnautics.SkyDataHandler;
+import dev.devce.rocketnautics.client.DeepSpaceHandler;
+import dev.devce.rocketnautics.client.PlanetColors;
 import dev.devce.rocketnautics.client.SkyHandler;
-import net.minecraft.core.Holder;
+import dev.devce.rocketnautics.content.orbit.DeepSpaceData;
+import dev.devce.rocketnautics.content.orbit.universe.CubePlanet;
+import dev.devce.rocketnautics.content.orbit.universe.UniverseDefinition;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.BiomeTags;
@@ -69,10 +73,35 @@ public class NetworkHandler {
         );
 
         registrar.playToServer(
-            SputnikNodeSyncPayload.TYPE,
-            SputnikNodeSyncPayload.CODEC,
-            (payload, context) -> context.enqueueWork(() -> handleSputnikSync(context.player(), payload.pos(), payload.graphData()))
+                SputnikNodeSyncPayload.TYPE,
+                SputnikNodeSyncPayload.CODEC,
+                (payload, context) -> context.enqueueWork(() -> handleSputnikSync(context.player(), payload.pos(), payload.graphData()))
         );
+
+        registrar.playToServer(
+                PlanetRenderRequestPayload.TYPE,
+                PlanetRenderRequestPayload.CODEC,
+                (payload, context) -> context.enqueueWork(() -> handlePlanetRenderRequest(context.player(), payload.ids(), payload.powerScale()))
+        );
+
+        registrar.playToClient(
+                PlanetRenderPayload.TYPE,
+                PlanetRenderPayload.CODEC,
+                (payload, context) -> context.enqueueWork(() -> handlePlanetRenderData(payload.id(), payload.renderData(), payload.powerSize()))
+        );
+
+        registrar.playToClient(
+                UniverseDefinitionPayload.TYPE,
+                UniverseDefinitionPayload.CODEC,
+                (payload, context) -> context.enqueueWork(() -> handleUniverseDefinition(payload.definition()))
+        );
+
+        registrar.playToClient(
+                DeepSpacePositionPayload.TYPE,
+                DeepSpacePositionPayload.CODEC,
+                (payload, context) -> context.enqueueWork(payload::handle)
+        );
+
     }
 
     private static void handleSputnikSync(net.minecraft.world.entity.player.Player player, net.minecraft.core.BlockPos pos, net.minecraft.nbt.CompoundTag graphData) {
@@ -92,15 +121,14 @@ public class NetworkHandler {
         if (foundLevel != null && foundLevel.getBlockEntity(pos) instanceof dev.devce.rocketnautics.content.blocks.SputnikBlockEntity sputnik) {
             sputnik.graph.load(graphData);
             sputnik.graph.setContext(sputnik);
-            
+
             // Force immediate refresh to ensure server sees engines before next tick
             sputnik.refreshEngines();
             sputnik.setChanged();
-            
-            /* 
+/*
             if (dev.devce.rocketnautics.RocketConfig.SERVER.enableEngineDebugLogging.get()) {
-                dev.devce.rocketnautics.RocketNautics.LOGGER.info("Sputnik at {} (level {}) SYNCED. Nodes: {}, Connections: {}, Engines Found: {}", 
-                    pos, foundLevel.dimension().location(), sputnik.graph.getNodes().size(), sputnik.graph.getConnections().size(), sputnik.getEngineCount());
+                dev.devce.rocketnautics.RocketNautics.LOGGER.info("Sputnik at {} (level {}) SYNCED. Nodes: {}, Connections: {}, Engines Found: {}",
+                        pos, foundLevel.dimension().location(), sputnik.graph.getNodes().size(), sputnik.graph.getConnections().size(), sputnik.getEngineCount());
             }
             */
         } else {
@@ -145,5 +173,38 @@ public class NetworkHandler {
     @net.neoforged.api.distmarker.OnlyIn(net.neoforged.api.distmarker.Dist.CLIENT)
     private static void handleHeatData(double x, double y, double z, float intensity) {
         dev.devce.rocketnautics.client.HeatClientHandler.updateHeat(x, y, z, intensity);
+    }
+
+    private static void handlePlanetRenderRequest(net.minecraft.world.entity.player.Player rawPlayer, int[] ids, int powerSize) {
+        if (!(rawPlayer instanceof ServerPlayer player)) return;
+        ServerLevel level = player.serverLevel();
+
+        CompletableFuture.runAsync(() -> {
+            DeepSpaceData data = DeepSpaceData.getInstance(level.getServer());
+            UniverseDefinition def = data.getUniverse();
+            for (int id : ids) {
+                CubePlanet planet = def.getPlanetById(id);
+                // computing the render data may take time, so we dispatch in separate packets.
+                // would it be better to send a single large packet after loading everything?
+                byte[] send;
+                if (planet == null) {
+                    send = PlanetColors.BLANK;
+                } else {
+                    send = planet.getRenderData(powerSize);
+                }
+                PlanetRenderPayload payload = new PlanetRenderPayload(id, send, powerSize);
+                level.getServer().execute(() -> PacketDistributor.sendToPlayer(player, payload));
+            }
+        });
+    }
+
+    @net.neoforged.api.distmarker.OnlyIn(net.neoforged.api.distmarker.Dist.CLIENT)
+    private static void handlePlanetRenderData(int id, byte[] renderData, int powerSize) {
+        DeepSpaceHandler.receiveRenderData(id, renderData, powerSize);
+    }
+
+    @net.neoforged.api.distmarker.OnlyIn(net.neoforged.api.distmarker.Dist.CLIENT)
+    private static void handleUniverseDefinition(UniverseDefinition definition) {
+        DeepSpaceHandler.receiveUniverse(definition);
     }
 }

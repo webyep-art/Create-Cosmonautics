@@ -3,7 +3,11 @@
 package dev.devce.rocketnautics.content.physics;
 
 import dev.devce.rocketnautics.RocketNautics;
+import dev.devce.rocketnautics.api.orbit.DeepSpaceHelper;
 import dev.devce.rocketnautics.content.commands.ShipCopyPasteCommand;
+import dev.devce.rocketnautics.content.orbit.DeepSpaceData;
+import dev.devce.rocketnautics.content.orbit.DeepSpaceInstance;
+import dev.devce.rocketnautics.content.orbit.universe.CubePlanet;
 import dev.devce.rocketnautics.network.DebugLogPayload;
 import dev.devce.rocketnautics.network.SeamlessTransitionPayload;
 import dev.ryanhcode.sable.Sable;
@@ -45,8 +49,15 @@ import net.neoforged.neoforge.event.tick.PlayerTickEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.fml.loading.FMLPaths;
+import org.hipparchus.geometry.euclidean.threed.Rotation;
+import org.hipparchus.geometry.euclidean.threed.RotationConvention;
+import org.hipparchus.geometry.euclidean.threed.Vector3D;
 import org.joml.Vector3d;
 import org.joml.Quaterniond;
+import org.joml.Vector3dc;
+import org.joml.Vector3f;
+import org.orekit.time.AbsoluteDate;
+import org.orekit.utils.TimeStampedPVCoordinates;
 
 import java.io.File;
 import java.io.IOException;
@@ -66,9 +77,7 @@ import java.util.Optional;
 public class SpaceTransitionHandler {
     
     
-    public static final double OVERWORLD_SPACE_Y = 1000000.0;
-    private static final double SPACE_EXIT_Y = 0.0;
-    private static final double TRANSITION_SAFE_OFFSET = 50.0;
+    public static final double TRANSITION_SAFE_OFFSET = 1000.0;
     private static final int REBUILD_DELAY_TICKS = 3;
     private static final int SEATING_RECOVERY_TIMEOUT = 30;
 
@@ -103,7 +112,7 @@ public class SpaceTransitionHandler {
     private static final Map<UUID, SeatingTask> PENDING_SEATING = new ConcurrentHashMap<>();
     private static final Map<UUID, AutonomousTask> PENDING_AUTONOMOUS = new ConcurrentHashMap<>();
 
-    private record TeleportTask(ResourceKey<Level> targetDim, double targetY) {}
+    private record TeleportTask(ResourceKey<Level> targetDim, Vec3 location, Vec3 deltaMovementOverride) {}
     private record SeatingTask(UUID shipUUID, double relPlotX, double relPlotY, double relPlotZ, String vehicleType, int ticksLeft, boolean blockClicked) {}
     
     /** Represents a ship jumping dimensions without a player. */
@@ -120,11 +129,11 @@ public class SpaceTransitionHandler {
     public static void init() {
         SableEventPlatform.INSTANCE.onPhysicsTick((physicsSystem, timeStep) -> {
             ServerLevel level = physicsSystem.getLevel();
-            
+
             // Handle ships currently in the world
-            ServerSubLevelContainer container = (ServerSubLevelContainer) SubLevelContainer.getContainer(level);
-            if (container != null) {
-                
+            ServerSubLevelContainer container = SubLevelContainer.getContainer(level);
+            if (!DeepSpaceData.isDeepSpace(level) && container != null) {
+
                 List<UUID> shipIds = container.getAllSubLevels().stream().map(SubLevel::getUniqueId).toList();
                 for (UUID id : shipIds) {
                     SubLevel sl = container.getSubLevel(id);
@@ -142,22 +151,19 @@ public class SpaceTransitionHandler {
                     if (hasPlayer) continue;
 
                     double y = ship.logicalPose().position().y;
-                    boolean toOverworld = (level.dimension() == SPACE_DIM && y <= SPACE_EXIT_Y);
-                    boolean toSpace = (level.dimension() == Level.OVERWORLD && y >= OVERWORLD_SPACE_Y);
-
-                    if (toOverworld || toSpace) {
-                        ResourceKey<Level> targetDim = toOverworld ? Level.OVERWORLD : SPACE_DIM;
-                        double targetY = toOverworld ? (OVERWORLD_SPACE_Y - 100.0) : 50.0;
-                        
-                        Vector3d pos = ship.logicalPose().position();
-                        Vector3d velocity = new Vector3d(0);
+                    DeepSpaceData instance = DeepSpaceData.getInstance(level.getServer());
+                    CubePlanet linked = instance.getUniverse().getPlanetByDimension(level.dimension());
+                    // make sure autonomous transfers happen much later compared to player-driven transfers.
+                    if (linked != null && linked.linkedDimension() != null && linked.linkedDimension().transitionHeight() + TRANSITION_SAFE_OFFSET < y) {
                         var handle = physicsSystem.getPhysicsHandle(ship);
-                        if (handle != null) velocity.set(handle.getLinearVelocity());
 
                         try {
                             CompoundTag tag = ship.getPlot().save();
                             String shipName = ship.getName();
                             if (shipName == null) shipName = "Unidentified Object";
+
+                            DeepSpaceInstance claimed = instance.claimNewInstance((int) (ship.boundingBox().size().length() / 16 + 2));
+                            initInstance(claimed, ship.logicalPose().position(), handle.getLinearVelocity(new Vector3d()), linked, ship);
                             
                             tag.putString("ShipName", shipName);
                             saveShipMetadata(ship, ship.logicalPose(), tag);
@@ -165,10 +171,9 @@ public class SpaceTransitionHandler {
                             File file = new File(SHIPS_DIR.toFile(), "auto_" + id + ".nbt");
                             if (!SHIPS_DIR.toFile().exists()) SHIPS_DIR.toFile().mkdirs();
                             NbtIo.writeCompressed(tag, file.toPath());
-
-                            PENDING_AUTONOMOUS.put(id, new AutonomousTask(targetDim, pos.x, targetY, pos.z, velocity, shipName, 10));
+                            PENDING_AUTONOMOUS.put(id, new AutonomousTask(DeepSpaceData.DEEP_SPACE_DIM, claimed.getCenter().x(), claimed.getCenter().y(), claimed.getCenter().z(), new Vector3d(), shipName, 10));
                             ship.markRemoved();
-                            RocketNautics.LOGGER.info("Autonomous jump: {} to {}", id, targetDim.location());
+                            RocketNautics.LOGGER.info("Autonomous jump: {} to Deep Space Instance {}", id, claimed.getId());
                         } catch (IOException e) {
                             RocketNautics.LOGGER.error("Failed autonomous jump", e);
                         }
@@ -200,7 +205,7 @@ public class SpaceTransitionHandler {
                                 );
                                 Pose3d pose = new Pose3d(new Vector3d(task.x, task.y, task.z), rot, new Vector3d(0), new Vector3d(1));
 
-                                ServerSubLevelContainer containerInTarget = (ServerSubLevelContainer) SubLevelContainer.getContainer(level);
+                                ServerSubLevelContainer containerInTarget = SubLevelContainer.getContainer(level);
                                 ServerSubLevel newShip = (ServerSubLevel) containerInTarget.allocateNewSubLevel(pose);
                                 newShip.setName(task.name);
                                 newShip.getPlot().load(tag);
@@ -209,12 +214,7 @@ public class SpaceTransitionHandler {
 
                                 
                                 var handle = physicsSystem.getPhysicsHandle(newShip);
-                                if (handle != null) {
-                                    double mass = newShip.getMassTracker().getMass();
-                                    if (mass > 0) {
-                                        handle.applyLinearImpulse(new org.joml.Vector3d(task.velocity).mul(mass));
-                                    }
-                                }
+                                handle.addLinearAndAngularVelocity(task.velocity, new Vector3d());
 
                                 file.delete();
                                 RocketNautics.LOGGER.info("Autonomous rebuild: {} in {}", originalUUID, level.dimension().location());
@@ -264,13 +264,44 @@ public class SpaceTransitionHandler {
      */
     private static void checkTransitionConditions(ServerPlayer player, ServerLevel level) {
         double y = player.getY();
-        if (level.dimension() == SPACE_DIM && y <= SPACE_EXIT_Y) {
-            // Drop from space back to the Overworld
-            initiateTransition(player, level, Level.OVERWORLD, OVERWORLD_SPACE_Y - TRANSITION_SAFE_OFFSET);
-        } else if (level.dimension() == Level.OVERWORLD && y >= OVERWORLD_SPACE_Y) {
-            // Ascend from the Overworld into space
-            initiateTransition(player, level, SPACE_DIM, 10.0);
+//        if (level.dimension() == SPACE_DIM && y <= 0) {
+//            // Drop from space back to the Overworld
+//            initiateTransition(player, level, Level.OVERWORLD, OVERWORLD_SPACE_Y - TRANSITION_SAFE_OFFSET);
+//        } else if (level.dimension() == Level.OVERWORLD && y >= OVERWORLD_SPACE_Y) {
+//            // Ascend from the Overworld into space
+//            initiateTransition(player, level, SPACE_DIM, 10.0);
+//        }
+        if (DeepSpaceData.isDeepSpace(level)) return;
+        DeepSpaceData instance = DeepSpaceData.getInstance(level.getServer());
+        CubePlanet linked = instance.getUniverse().getPlanetByDimension(level.dimension());
+        if (linked != null && linked.linkedDimension() != null && linked.linkedDimension().transitionHeight() < y) {
+            ServerSubLevel ship = findShipUnderPlayer(player, level);
+            int size = ship == null ? 2 : (int) (ship.boundingBox().size().length() / 16 + 2);
+            DeepSpaceInstance claimed = instance.claimNewInstance(size);
+            Vector3d v = ship == null ? new Vector3d() : ship.latestLinearVelocity;
+            // don't forgot to convert from m/t to m/s
+            Vector3d p = new Vector3d(player.getX(), player.getY(), player.getZ());
+            initInstance(claimed, p, v, linked, ship);
+            initiateTransition(player, level, DeepSpaceData.DEEP_SPACE_DIM, new Vec3(claimed.getCenter().get(new Vector3f())), Vec3.ZERO);
         }
+    }
+
+    private static void initInstance(DeepSpaceInstance instance, Vector3dc dimPosition, Vector3dc velocity, CubePlanet planet, ServerSubLevel ship) {
+        AbsoluteDate currentDate = instance.getManager().getUniverseTime();
+        Rotation rotation = planet.getRotationAtTime(currentDate);
+        rotation = rotation.compose(new Rotation(Vector3D.PLUS_I, Vector3D.PLUS_J), RotationConvention.FRAME_TRANSFORM);
+        Vector3d scaledPosition = dimPosition.mul(planet.radius() / 30_000_000, new Vector3d());
+        Vector3D unrotatedPosition = new Vector3D(scaledPosition.x(), dimPosition.y() + planet.radius() + TRANSITION_SAFE_OFFSET, scaledPosition.z());
+        if (velocity.lengthSquared() < 1e-5) {
+            velocity = new Vector3d(0, 1, 0);
+        }
+        ship.updateLastPose();
+        ship.logicalPose().orientation().mul(DeepSpaceHelper.adapt(rotation));
+        Vector3D actualPosition = rotation.applyInverseTo(unrotatedPosition);
+        TimeStampedPVCoordinates coords = new TimeStampedPVCoordinates(currentDate, actualPosition,
+                rotation.applyInverseTo(DeepSpaceHelper.adapt(velocity))
+                        .add(planet.rotationDescription().getRotationRate().crossProduct(actualPosition))); // compensate for rotation rate of the planet
+        instance.getPosition().init(instance.getManager().getUniverse(), planet.orekitFrame(), coords);
     }
 
     private static void processRebuildCounter(ServerPlayer player, ServerLevel level) {
@@ -310,7 +341,7 @@ public class SpaceTransitionHandler {
      * Prepares both the ship and the player for dimension hopping.
      * The ship is serialized to NBT, and the player is queued for teleportation.
      */
-    private static void initiateTransition(ServerPlayer player, ServerLevel fromLevel, ResourceKey<Level> toDim, double targetY) {
+    public static void initiateTransition(ServerPlayer player, ServerLevel fromLevel, ResourceKey<Level> toDim, Vec3 position, Vec3 deltaMovementOverride) {
         sendDebug(player, "Initiating dimension jump...", 0x55FF55);
         
         ServerSubLevel ship = findShipUnderPlayer(player, fromLevel);
@@ -321,7 +352,7 @@ public class SpaceTransitionHandler {
 
         // Enable client-side transition overlay
         PacketDistributor.sendToPlayer(player, new SeamlessTransitionPayload(true));
-        PENDING_TELEPORTS.put(player.getUUID(), new TeleportTask(toDim, targetY));
+        PENDING_TELEPORTS.put(player.getUUID(), new TeleportTask(toDim, position, deltaMovementOverride));
         sendDebug(player, "Teleport task queued for " + toDim.location(), 0xFFFF55);
     }
 
@@ -347,12 +378,12 @@ public class SpaceTransitionHandler {
             return;
         }
         
-        sendDebug(player, "Executing teleport to " + task.targetDim.location() + " at Y=" + task.targetY, 0x55FF55);
+        sendDebug(player, "Executing teleport to " + task.targetDim.location() + " at " + task.location, 0x55FF55);
         
         DimensionTransition transition = new DimensionTransition(
             toLevel, 
-            new Vec3(player.getX(), task.targetY, player.getZ()), 
-            player.getDeltaMovement(), 
+            task.location(),
+            task.deltaMovementOverride(),
             player.getYRot(), 
             player.getXRot(), 
             DimensionTransition.DO_NOTHING

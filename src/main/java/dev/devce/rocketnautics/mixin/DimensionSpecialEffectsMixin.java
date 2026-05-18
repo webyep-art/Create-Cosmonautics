@@ -1,6 +1,7 @@
 package dev.devce.rocketnautics.mixin;
 
 import dev.devce.rocketnautics.SkyDataHandler;
+import dev.devce.rocketnautics.content.orbit.DeepSpaceData;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.DimensionSpecialEffects;
 import net.minecraft.util.Mth;

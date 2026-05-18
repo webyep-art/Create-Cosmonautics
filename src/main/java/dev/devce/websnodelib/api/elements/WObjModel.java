@@ -1,5 +1,9 @@
 package dev.devce.websnodelib.api.elements;
 
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderType;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
 
@@ -62,7 +66,6 @@ public class WObjModel {
         this.texture = texture;
     }
 
-    @net.neoforged.api.distmarker.OnlyIn(net.neoforged.api.distmarker.Dist.CLIENT)
     public static net.minecraft.resources.ResourceLocation loadExternalTexture(String path) {
         try (InputStream is = new java.io.FileInputStream(path)) {
             com.mojang.blaze3d.platform.NativeImage image = com.mojang.blaze3d.platform.NativeImage.read(is);
@@ -95,10 +98,9 @@ public class WObjModel {
         for (Vector3f n : vertexNormals) n.normalize();
     }
 
-    @net.neoforged.api.distmarker.OnlyIn(net.neoforged.api.distmarker.Dist.CLIENT)
-    public void render(com.mojang.blaze3d.vertex.PoseStack poseStack, net.minecraft.client.renderer.MultiBufferSource bufferSource, int packedLight, int packedOverlay, int color) {
-        net.minecraft.client.renderer.RenderType type = texture != null ? net.minecraft.client.renderer.RenderType.entityCutout(texture) : net.minecraft.client.renderer.RenderType.solid();
-        com.mojang.blaze3d.vertex.VertexConsumer builder = bufferSource.getBuffer(type);
+    public void render(PoseStack poseStack, MultiBufferSource bufferSource, int packedLight, int packedOverlay, int color) {
+        RenderType type = texture != null ? RenderType.entityCutout(texture) : RenderType.solid();
+        VertexConsumer builder = bufferSource.getBuffer(type);
         float r = ((color >> 16) & 0xFF) / 255.0f;
         float g = ((color >> 8) & 0xFF) / 255.0f;
         float b = (color & 0xFF) / 255.0f;
@@ -112,8 +114,7 @@ public class WObjModel {
         }
     }
 
-    @net.neoforged.api.distmarker.OnlyIn(net.neoforged.api.distmarker.Dist.CLIENT)
-    private void renderVertex(VertexIndices idx, com.mojang.blaze3d.vertex.PoseStack poseStack, com.mojang.blaze3d.vertex.VertexConsumer builder, float r, float g, float b, float a, int light, int overlay) {
+    private void renderVertex(VertexIndices idx, PoseStack poseStack, VertexConsumer builder, float r, float g, float b, float a, int light, int overlay) {
         Vector3f pos = vertices.get(idx.vIdx);
         Vector3f normal = vertexNormals[idx.vIdx];
         Vector2f uv = idx.uvIdx != -1 ? uvs.get(idx.uvIdx) : new Vector2f(0, 0);

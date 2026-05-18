@@ -13,6 +13,11 @@ import org.joml.Vector3d;
 
 public class VectorThrusterBlockEntity extends RocketThrusterBlockEntity {
     @Override
+    public String getPeripheralType() {
+        return "vector_engine";
+    }
+
+    @Override
     public double readValue(String key) {
         if (key.equals("thrust")) return getFlow() * 100.0;
         if (key.equals("gimbal_x")) return gimbalX;
@@ -66,7 +71,7 @@ public class VectorThrusterBlockEntity extends RocketThrusterBlockEntity {
     public void updateGimbalAngles() {
         if (level == null)
             return;
-
+            
         if (ccGimbalTimeout > 0) {
             ccGimbalTimeout--;
         } else {
@@ -77,7 +82,7 @@ public class VectorThrusterBlockEntity extends RocketThrusterBlockEntity {
             if (Math.abs(ccGimbalY) < 0.001f) ccGimbalY = 0;
             if (Math.abs(ccGimbalZ) < 0.001f) ccGimbalZ = 0;
         }
-
+            
         Direction nozzle = getThrustDirection();
 
         float gX = ccGimbalX;

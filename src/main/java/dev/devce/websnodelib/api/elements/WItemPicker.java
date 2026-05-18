@@ -57,7 +57,6 @@ public class WItemPicker extends WElement {
 
     @Override
     public boolean handleMouseClick(double mx, double my, int button) {
-        if (net.neoforged.fml.loading.FMLEnvironment.dist.isDedicatedServer()) return false;
         if (mx >= 0 && mx <= width && my >= 0 && my <= height) {
             Minecraft mc = Minecraft.getInstance();
             if (button == 1) { // Right click to clear
@@ -80,9 +79,8 @@ public class WItemPicker extends WElement {
     @Override
     public CompoundTag save() {
         CompoundTag tag = super.save();
-        net.minecraft.core.HolderLookup.Provider access = (parentNode != null) ? parentNode.getRegistryAccess() : null;
-        if (!stack.isEmpty() && access != null) {
-            tag.put("item", stack.saveOptional(access));
+        if (!stack.isEmpty()) {
+            tag.put("item", stack.saveOptional(Minecraft.getInstance().level.registryAccess()));
         }
         tag.putInt("borderColor", borderColor);
         return tag;
@@ -92,10 +90,7 @@ public class WItemPicker extends WElement {
     public void load(CompoundTag tag) {
         super.load(tag);
         if (tag.contains("item")) {
-            net.minecraft.core.HolderLookup.Provider access = (parentNode != null) ? parentNode.getRegistryAccess() : null;
-            if (access != null) {
-                this.stack = ItemStack.parseOptional(access, tag.getCompound("item"));
-            }
+            this.stack = ItemStack.parseOptional(Minecraft.getInstance().level.registryAccess(), tag.getCompound("item"));
         }
         if (tag.contains("borderColor")) {
             this.borderColor = tag.getInt("borderColor");

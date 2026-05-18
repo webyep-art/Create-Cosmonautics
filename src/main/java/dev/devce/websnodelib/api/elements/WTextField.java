@@ -1,7 +1,10 @@
 package dev.devce.websnodelib.api.elements;
 
 import dev.devce.websnodelib.api.WElement;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.Minecraft;
 import net.minecraft.util.Mth;
+import org.lwjgl.glfw.GLFW;
 
 public class WTextField extends WElement {
     private String value = "";
@@ -30,15 +33,14 @@ public class WTextField extends WElement {
     }
 
     @Override
-    @net.neoforged.api.distmarker.OnlyIn(net.neoforged.api.distmarker.Dist.CLIENT)
-    public void render(net.minecraft.client.gui.GuiGraphics graphics, int x, int y, int mouseX, int mouseY, float partialTick) {
+    public void render(GuiGraphics graphics, int x, int y, int mouseX, int mouseY, float partialTick) {
         // AI FIX/ADD START
         if (renderBackground) {
             graphics.fill(x, y, x + width, y + height, 0xFF000000);
             graphics.renderOutline(x, y, width, height, focused ? focusedOutlineColor : unfocusedOutlineColor);
         }
         
-        var font = net.minecraft.client.Minecraft.getInstance().font;
+        var font = Minecraft.getInstance().font;
         
         // Render selection
         if (focused && selectionPos != cursorPos) {
@@ -91,7 +93,7 @@ public class WTextField extends WElement {
                 cursorPos = value.length();
                 selectionPos = cursorPos;
             }
-            var font = net.minecraft.client.Minecraft.getInstance().font;
+            var font = Minecraft.getInstance().font;
             cursorPos = 0;
             int currentX = 0;
             for (int i = 0; i < value.length(); i++) {
@@ -100,9 +102,9 @@ public class WTextField extends WElement {
                 currentX += charWidth;
                 cursorPos = i + 1;
             }
-            long handle = net.minecraft.client.Minecraft.getInstance().getWindow().getWindow();
-            boolean shift = org.lwjgl.glfw.GLFW.glfwGetKey(handle, org.lwjgl.glfw.GLFW.GLFW_KEY_LEFT_SHIFT) == org.lwjgl.glfw.GLFW.GLFW_PRESS ||
-                           org.lwjgl.glfw.GLFW.glfwGetKey(handle, org.lwjgl.glfw.GLFW.GLFW_KEY_RIGHT_SHIFT) == org.lwjgl.glfw.GLFW.GLFW_PRESS;
+            long handle = Minecraft.getInstance().getWindow().getWindow();
+            boolean shift = GLFW.glfwGetKey(handle, GLFW.GLFW_KEY_LEFT_SHIFT) == GLFW.GLFW_PRESS ||
+                           GLFW.glfwGetKey(handle, GLFW.GLFW_KEY_RIGHT_SHIFT) == GLFW.GLFW_PRESS;
             
             if (!shift) {
                 selectionPos = cursorPos;
@@ -125,26 +127,26 @@ public class WTextField extends WElement {
         if (!focused) return false;
         
         // AI FIX/ADD START
-        boolean shift = (modifiers & org.lwjgl.glfw.GLFW.GLFW_MOD_SHIFT) != 0;
-        boolean ctrl = (modifiers & (net.minecraft.client.Minecraft.ON_OSX ? org.lwjgl.glfw.GLFW.GLFW_MOD_SUPER : org.lwjgl.glfw.GLFW.GLFW_MOD_CONTROL)) != 0;
+        boolean shift = (modifiers & GLFW.GLFW_MOD_SHIFT) != 0;
+        boolean ctrl = (modifiers & (Minecraft.ON_OSX ? GLFW.GLFW_MOD_SUPER : GLFW.GLFW_MOD_CONTROL)) != 0;
 
-        if (keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_ENTER || keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_KP_ENTER) {
+        if (keyCode == GLFW.GLFW_KEY_ENTER || keyCode == GLFW.GLFW_KEY_KP_ENTER) {
             focused = false; 
             return true;
         }
-        if (keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_ESCAPE) {
+        if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
             value = originalValue; 
             focused = false;
             return true;
         }
         
-        if (keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_A && ctrl) {
+        if (keyCode == GLFW.GLFW_KEY_A && ctrl) {
             selectionPos = 0;
             cursorPos = value.length();
             return true;
         }
 
-        if (keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_LEFT) {
+        if (keyCode == GLFW.GLFW_KEY_LEFT) {
             if (ctrl) {
                 cursorPos = findNextWord(false);
             } else {
@@ -153,7 +155,7 @@ public class WTextField extends WElement {
             if (!shift) selectionPos = cursorPos;
             return true;
         }
-        if (keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_RIGHT) {
+        if (keyCode == GLFW.GLFW_KEY_RIGHT) {
             if (ctrl) {
                 cursorPos = findNextWord(true);
             } else {
@@ -162,18 +164,18 @@ public class WTextField extends WElement {
             if (!shift) selectionPos = cursorPos;
             return true;
         }
-        if (keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_HOME) {
+        if (keyCode == GLFW.GLFW_KEY_HOME) {
             cursorPos = 0;
             if (!shift) selectionPos = cursorPos;
             return true;
         }
-        if (keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_END) {
+        if (keyCode == GLFW.GLFW_KEY_END) {
             cursorPos = value.length();
             if (!shift) selectionPos = cursorPos;
             return true;
         }
 
-        if (keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_BACKSPACE) {
+        if (keyCode == GLFW.GLFW_KEY_BACKSPACE) {
             if (selectionPos != cursorPos) {
                 deleteSelection();
             } else if (cursorPos > 0) {
@@ -183,7 +185,7 @@ public class WTextField extends WElement {
             }
             return true;
         }
-        if (keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_DELETE) {
+        if (keyCode == GLFW.GLFW_KEY_DELETE) {
             if (selectionPos != cursorPos) {
                 deleteSelection();
             } else if (cursorPos < value.length()) {

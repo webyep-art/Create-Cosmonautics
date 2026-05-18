@@ -23,6 +23,10 @@
   "block.rocketnautics.sputnik": "Sputnik Probe",
   "block.rocketnautics.sputnik.funny": "Beep... Beep... Beep... A metal potato in the void.",
   "block.rocketnautics.sputnik.summary": "An early artificial satellite. Acts as a permanent Chunk Loader and reports biome colors. Can be integrated with ComputerCraft for advanced cartography.",
+
+  "block.rocketnautics.hologram_block": "Hologram Table",
+  "block.rocketnautics.hologram_block.funny": "Actually a volumetric display.",
+  "block.rocketnautics.hologram_block.summary": "Displays a hologram of the universe around itself at configurable scale and size. Short click the configuration points to increase/decrease the hologram scale.",
   
   "rocketnautics.tooltip.summary_title": "Technical Summary",
   "rocketnautics.simulated_section.rocketnautics": "Cosmonautics",
@@ -31,7 +35,9 @@
   "gui.rocketnautics.min_thrust": "Min Thrust (0 Signal)",
   "gui.rocketnautics.max_thrust": "Max Thrust (15 Signal)",
   "gui.rocketnautics.thrust_power": "Thrust Power",
-  
+  "gui.rocketnautics.holo_size": "Hologram Size",
+  "gui.rocketnautics.holo_scale": "Hologram Scale",
+
   "item.rocketnautics.music_disc_space": "Music Disc",
   "item.rocketnautics.music_disc_space.desc": "Kevin MacLeod - Brittle Rille",
   "item.rocketnautics.music_disc_space.funny": "We noticed that one of our employees was playing some game instead of working. We fired him, but we really liked the soundtrack.",
@@ -78,10 +84,6 @@
   "item.rocketnautics.raw_titanium": "Raw Titanium",
   "item.rocketnautics.raw_titanium.funny": "Looks like a potato, but it's actually metal. Don't eat it.",
   "item.rocketnautics.raw_titanium.summary": "Unrefined titanium ore. Must be smelted or processed in a blast furnace.",
-
-  "item.rocketnautics.crushed_raw_titanium": "Crushed Titanium",
-  "item.rocketnautics.crushed_raw_titanium.funny": "Looks like diced potato, but it's still metal. Seriously, don't eat it.",
-  "item.rocketnautics.crushed_raw_titanium.summary": "Unrefined crushed titanium ore. Must be smelted or processed in a blast furnace.",
   
   "item.rocketnautics.titanium_alloy": "Titanium Alloy",
   "item.rocketnautics.titanium_alloy.funny": "Double the toughness, double the weight, double the insurance cost.",

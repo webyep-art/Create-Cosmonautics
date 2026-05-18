@@ -6,7 +6,7 @@ import net.minecraft.world.level.Level;
 
 import dev.devce.rocketnautics.api.peripherals.IPeripheral;
 
-public interface IThruster {
+public interface IThruster extends IPeripheral {
     boolean isActive();
     boolean isRemoved();
     BlockPos getBlockPos();
@@ -17,11 +17,18 @@ public interface IThruster {
     void setGimbal(double pitch, double yaw);
     float getFlow();
 
+    @Override
+    default String getPeripheralType() {
+        return "thruster";
+    }
+
+    @Override
     default double readValue(String key) {
         if (key.equals("thrust")) return getFlow() * 100.0;
         return 0;
     }
 
+    @Override
     default void writeValue(String key, double value) {
         if (key.equals("throttle")) {
             setActive(value > 0);
@@ -38,6 +45,7 @@ public interface IThruster {
         }
     }
 
+    @Override
     default void writeValues(String key, double... values) {
         if (key.equals("gimbal") && values.length >= 2) {
             setGimbal(values[0], values[1]);

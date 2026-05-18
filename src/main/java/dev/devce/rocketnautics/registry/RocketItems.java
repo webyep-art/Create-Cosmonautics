@@ -1,6 +1,5 @@
 package dev.devce.rocketnautics.registry;
 
-import com.simibubi.create.AllTags;
 import com.tterrag.registrate.util.entry.ItemEntry;
 import dev.devce.rocketnautics.RocketNautics;
 import dev.devce.rocketnautics.content.items.CreditsBookItem;
@@ -39,8 +38,6 @@ public class RocketItems {
     public static final ItemEntry<RocketItem> TITANIUM_INGOT = taggedIngredient("titanium_ingot", RocketTags.MetalTags.TITANIUM.ingots, Tags.Items.INGOTS);
 
     public static final ItemEntry<RocketItem> RAW_TITANIUM = taggedIngredient("raw_titanium", RocketTags.MetalTags.TITANIUM.rawOres, Tags.Items.RAW_MATERIALS);
-
-    public static final ItemEntry<RocketItem> CRUSHED_TITANIUM = taggedIngredient("crushed_raw_titanium", AllTags.AllItemTags.CRUSHED_RAW_MATERIALS.tag);
 
     public static final ItemEntry<RocketItem> TITANIUM_ALLOY = taggedIngredientFireResistant("titanium_alloy", RocketTags.MetalTags.TITANIUM_ALLOY.ingots, Tags.Items.INGOTS);
 

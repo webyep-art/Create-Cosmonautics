@@ -31,8 +31,13 @@ import java.util.UUID;
 public class BoosterThrusterBlockEntity extends SmartBlockEntity implements BlockEntitySubLevelActor, IThruster, com.simibubi.create.api.equipment.goggles.IHaveGoggleInformation {
     private UUID uniqueId = UUID.randomUUID();
 
+    @Override
     public UUID getUniqueId() {
         return uniqueId;
+    }
+    @Override
+    public String getPeripheralType() {
+        return "booster";
     }
 
     @Override
@@ -63,15 +68,15 @@ public class BoosterThrusterBlockEntity extends SmartBlockEntity implements Bloc
     @Override
     public void addBehaviours(List<BlockEntityBehaviour> behaviours) {
         thrustPower = new ScrollValueBehaviour(
-                Component.translatable("gui.rocketnautics.thrust_power"),
-                this,
+                Component.translatable("gui.rocketnautics.thrust_power"), 
+                this, 
                 new CenteredSideValueBoxTransform((state, direction) -> direction != state.getValue(RocketThrusterBlock.FACING))
         );
         int limit = RocketConfig.SERVER.brokenBarrier.get() ? 100 : 20;
         thrustPower.between(1, limit);
         thrustPower.withFormatter(v -> (v * 50) + " N");
         thrustPower.setValue(limit);
-
+        
         behaviours.add(thrustPower);
     }
 
@@ -93,10 +98,10 @@ public class BoosterThrusterBlockEntity extends SmartBlockEntity implements Bloc
         }
 
         blockEntity.tick();
-
+        
         if (level.isClientSide()) {
             blockEntity.updateSound();
-
+            
             if (active) {
                 BlockPos fuelPos = blockEntity.findFuelPos();
                 if (fuelPos != null) {
@@ -121,7 +126,7 @@ public class BoosterThrusterBlockEntity extends SmartBlockEntity implements Bloc
                 double maxSearchDist = 64.0;
                 net.minecraft.world.phys.Vec3 end = start.add(nozzle.getStepX() * maxSearchDist, nozzle.getStepY() * maxSearchDist, nozzle.getStepZ() * maxSearchDist);
                 net.minecraft.world.phys.BlockHitResult hit = level.clip(new net.minecraft.world.level.ClipContext(start, end, net.minecraft.world.level.ClipContext.Block.COLLIDER, net.minecraft.world.level.ClipContext.Fluid.NONE, net.minecraft.world.phys.shapes.CollisionContext.empty()));
-
+                
                 double hitDist = maxSearchDist;
                 boolean hitBlock = false;
                 net.minecraft.world.phys.Vec3 hitPos = end;
@@ -141,13 +146,13 @@ public class BoosterThrusterBlockEntity extends SmartBlockEntity implements Bloc
                     double speedY = nozzle.getStepY() * (2.0 + random.nextDouble() * 2.0) * boost * actualSpeedMult + (random.nextDouble() - 0.5) * 0.4;
                     double speedZ = nozzle.getStepZ() * (2.0 + random.nextDouble() * 2.0) * boost * actualSpeedMult + (random.nextDouble() - 0.5) * 0.4;
 
-                    var particle = (blockEntity.ignitionTicks < blockEntity.getWarmupTime() / 2) ?
-                            RocketParticles.PLUME.get() :
+                    var particle = (blockEntity.ignitionTicks < blockEntity.getWarmupTime() / 2) ? 
+                            RocketParticles.PLUME.get() : 
                             RocketParticles.PLASMA.get();
 
                     level.addParticle(particle, x, y, z, speedX, speedY, speedZ);
                 }
-
+                
                 if (hitBlock && random.nextFloat() < (visualPower / 50.0f)) {
                     for (int i = 0; i < (1 + visualPower / 5); i++) {
                         net.minecraft.world.phys.Vec3 normal = new net.minecraft.world.phys.Vec3(hit.getDirection().getStepX(), hit.getDirection().getStepY(), hit.getDirection().getStepZ());
@@ -159,7 +164,7 @@ public class BoosterThrusterBlockEntity extends SmartBlockEntity implements Bloc
                 }
             }
         }
-
+        
         if (active) {
             if (blockEntity.ignitionTicks < 100) blockEntity.ignitionTicks++;
         } else {
@@ -167,7 +172,7 @@ public class BoosterThrusterBlockEntity extends SmartBlockEntity implements Bloc
                 blockEntity.ignitionTicks--;
             }
         }
-
+        
         if (!level.isClientSide && active) {
             blockEntity.handleHeat();
             blockEntity.consumeFuel();
@@ -228,7 +233,7 @@ public class BoosterThrusterBlockEntity extends SmartBlockEntity implements Bloc
         Direction pushDirection = facing.getOpposite();
         double currentThrust = thrustPower.getValue() * 50.0;
         Vector3d thrustVector = new Vector3d(pushDirection.getStepX() * currentThrust, pushDirection.getStepY() * currentThrust, pushDirection.getStepZ() * currentThrust);
-
+        
         Vector3d blockCenter = new Vector3d(worldPosition.getX() + 0.5, worldPosition.getY() + 0.5, worldPosition.getZ() + 0.5);
         handle.applyImpulseAtPoint(blockCenter, thrustVector.mul(deltaTime));
     }
@@ -287,7 +292,7 @@ public class BoosterThrusterBlockEntity extends SmartBlockEntity implements Bloc
 
     public boolean isActive() {
         if (level != null && level.isClientSide) return currentlyBurning;
-
+        
         if (isSpent) return false;
 
         if (ignited && fuelTicks > 0) return true;
@@ -302,7 +307,7 @@ public class BoosterThrusterBlockEntity extends SmartBlockEntity implements Bloc
             }
             return false;
         }
-
+        
         if (ignited && fuelTicks <= 0) {
             BlockPos nextFuel = findFuelPos();
             if (nextFuel != null) {
@@ -341,10 +346,10 @@ public class BoosterThrusterBlockEntity extends SmartBlockEntity implements Bloc
     private BlockPos scanFuelPos() {
         Direction nozzle = getThrustDirection();
         Direction back = nozzle.getOpposite();
-
+        
         Direction axis1;
         Direction axis2;
-
+        
         if (back.getAxis() == Direction.Axis.Y) {
             axis1 = Direction.NORTH;
             axis2 = Direction.EAST;
@@ -362,26 +367,26 @@ public class BoosterThrusterBlockEntity extends SmartBlockEntity implements Bloc
             BlockPos layerCenter = worldPosition.relative(back, dist);
             boolean foundInLayer = false;
             BlockPos lastFoundInLayer = null;
-
+            
             for (int i = -1; i <= 1; i++) {
                 for (int j = -1; j <= 1; j++) {
                     BlockPos fuelPos = layerCenter.relative(axis1, i).relative(axis2, j);
                     BlockState state = level.getBlockState(fuelPos);
-
+                    
                     if (isBlockCombustible(state)) {
                         foundInLayer = true;
                         lastFoundInLayer = fuelPos;
                     }
                 }
             }
-
+            
             if (foundInLayer) {
                 furthestInChain = lastFoundInLayer;
             } else {
                 break;
             }
         }
-
+        
         return furthestInChain;
     }
 
@@ -446,21 +451,21 @@ public class BoosterThrusterBlockEntity extends SmartBlockEntity implements Bloc
     @Override
     public boolean addToGoggleTooltip(List<Component> tooltip, boolean isPlayerSneaking) {
         tooltip.add(Component.literal("    ").append(Component.translatable(getBlockState().getBlock().getDescriptionId()).withStyle(net.minecraft.ChatFormatting.GOLD)));
-
+        
         tooltip.add(Component.literal("  ").append(Component.translatable("rocketnautics.goggles.status")).append(": ")
-                .append(isActive() ? Component.translatable("rocketnautics.goggles.active").withStyle(net.minecraft.ChatFormatting.GREEN) :
-                        (isSpent ? Component.translatable("rocketnautics.goggles.spent").withStyle(net.minecraft.ChatFormatting.DARK_GRAY) :
+                .append(isActive() ? Component.translatable("rocketnautics.goggles.active").withStyle(net.minecraft.ChatFormatting.GREEN) : 
+                        (isSpent ? Component.translatable("rocketnautics.goggles.spent").withStyle(net.minecraft.ChatFormatting.DARK_GRAY) : 
                                    Component.translatable("rocketnautics.goggles.inactive").withStyle(net.minecraft.ChatFormatting.RED))));
-
+        
         int power = thrustPower.getValue();
         tooltip.add(Component.literal("  ").append(Component.translatable("rocketnautics.goggles.thrust")).append(": ")
                 .append(Component.literal(power * 10 + " N").withStyle(net.minecraft.ChatFormatting.GOLD)));
-
+        
         if (ignited && fuelTicks > 0) {
             tooltip.add(Component.literal("  ").append(Component.translatable("rocketnautics.goggles.burn_time")).append(": ")
                     .append(Component.literal((fuelTicks / 20) + "s").withStyle(net.minecraft.ChatFormatting.AQUA)));
         }
-
+        
         return true;
     }
 

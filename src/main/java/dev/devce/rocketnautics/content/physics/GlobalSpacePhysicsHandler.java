@@ -1,6 +1,7 @@
 package dev.devce.rocketnautics.content.physics;
 
 import dev.devce.rocketnautics.RocketNautics;
+import dev.devce.rocketnautics.content.orbit.DeepSpaceData;
 import dev.devce.rocketnautics.network.ReentryHeatPayload;
 import dev.devce.rocketnautics.registry.RocketParticles;
 import dev.ryanhcode.sable.api.physics.handle.RigidBodyHandle;
@@ -127,7 +128,7 @@ public class GlobalSpacePhysicsHandler {
         }
 
         // Space dimension is always zero gravity
-        if (level.dimension().location().getPath().equals("space")) {
+        if (level.dimension().location().getPath().equals("space") || DeepSpaceData.isDeepSpace(level)) {
             return 1.0;
         }
 

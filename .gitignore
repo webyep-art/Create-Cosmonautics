@@ -48,7 +48,7 @@ scratch/
 # Keep config but ignore credentials
 # discord_config.py
 compile_output.txt
-.editorconfig
 .idea
 .eclipse
+.editorconfig
 **/.cache

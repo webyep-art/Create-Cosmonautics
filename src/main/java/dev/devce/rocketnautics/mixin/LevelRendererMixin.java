@@ -1,16 +1,32 @@
 package dev.devce.rocketnautics.mixin;
 
+import com.mojang.blaze3d.vertex.VertexBuffer;
+import dev.devce.rocketnautics.SkyDataHandler;
+import dev.devce.rocketnautics.client.StarBufferExposer;
+import dev.devce.rocketnautics.content.orbit.DeepSpaceData;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.util.Mth;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
+import javax.annotation.Nullable;
+
 @Mixin(LevelRenderer.class)
-public abstract class LevelRendererMixin {
+public abstract class LevelRendererMixin implements StarBufferExposer {
     @org.spongepowered.asm.mixin.Shadow
     protected abstract void renderSnowAndRain(net.minecraft.client.renderer.LightTexture pLightTexture, float pPartialTick, double pCamX, double pCamY, double pCamZ);
+
+    @Shadow
+    @Nullable
+    private VertexBuffer starBuffer;
+
+    @Override
+    public VertexBuffer rocketnautics$starBuffer() {
+        return starBuffer;
+    }
 
     @Redirect(method = "renderSky", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/ClientLevel;getStarBrightness(F)F"))
     private float rocketnautics$boostStarBrightness(net.minecraft.client.multiplayer.ClientLevel instance, float partialTick) {
@@ -18,7 +34,7 @@ public abstract class LevelRendererMixin {
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null) return original;
 
-        double y = mc.player.getY();
+        double y = mc.player.getY() + SkyDataHandler.getHeightOffsetForLevel(mc.level.dimension());
         if (y > 1000.0) {
             float factor = (float) Mth.clamp((y - 1000.0) / 1000.0, 0.0, 1.0);
             
@@ -30,8 +46,8 @@ public abstract class LevelRendererMixin {
     @Redirect(method = "renderSky", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/ClientLevel;getSkyColor(Lnet/minecraft/world/phys/Vec3;F)Lnet/minecraft/world/phys/Vec3;"))
     private net.minecraft.world.phys.Vec3 rocketnautics$forceBlackSky(net.minecraft.client.multiplayer.ClientLevel instance, net.minecraft.world.phys.Vec3 pos, float partialTick) {
         net.minecraft.world.phys.Vec3 color = instance.getSkyColor(pos, partialTick);
-        
-        double y = pos.y;
+
+        double y = pos.y + SkyDataHandler.getHeightOffsetForLevel(Minecraft.getInstance().level.dimension());
         if (y > 1000.0) {
             float factor = (float) Mth.clamp((y - 1000.0) / 2000.0, 0.0, 1.0);
             

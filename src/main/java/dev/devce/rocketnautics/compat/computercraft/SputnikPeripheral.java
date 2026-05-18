@@ -72,16 +72,16 @@ public class SputnikPeripheral implements IPeripheral {
     public final Map<String, Object> getPhysics() {
         Map<String, Object> data = new HashMap<>();
         if (sputnik.getLevel() == null) return data;
-
+        
         var subLevel = dev.ryanhcode.sable.Sable.HELPER.getContaining(sputnik.getLevel(), sputnik.getBlockPos());
         if (subLevel instanceof ServerSubLevel serverSubLevel) {
             // Mass
             data.put("mass", serverSubLevel.getMassTracker().getMass());
-
+            
             // Pose (Position & Orientation)
             var pose = serverSubLevel.logicalPose();
             var lastPose = serverSubLevel.lastPose();
-
+            
             // Orientation Quaternions
             Map<String, Double> quat = new HashMap<>();
             quat.put("w", pose.orientation().w());
@@ -89,15 +89,15 @@ public class SputnikPeripheral implements IPeripheral {
             quat.put("y", pose.orientation().y());
             quat.put("z", pose.orientation().z());
             data.put("quaternion", quat);
-
+            
             // Euler Angles (Pitch, Yaw, Roll in degrees)
-            Vector3d euler = pose.orientation().getEulerAnglesYXZ(new Vector3d());
+            Vector3d euler = pose.orientation().getEulerAnglesXYZ(new Vector3d());
             Map<String, Double> angles = new HashMap<>();
             angles.put("pitch", Math.toDegrees(euler.x));
             angles.put("yaw", Math.toDegrees(euler.y));
             angles.put("roll", Math.toDegrees(euler.z));
             data.put("euler", angles);
-
+            
             // Velocity (Calculated from position delta over 1 tick)
             Vector3d velocity = new Vector3d(pose.position()).sub(lastPose.position()).mul(20.0);
             Map<String, Double> velData = new HashMap<>();
@@ -105,12 +105,12 @@ public class SputnikPeripheral implements IPeripheral {
             velData.put("y", velocity.y);
             velData.put("z", velocity.z);
             data.put("velocity", velData);
-
+            
             // Local Gravity approximation (if needed by flight computers)
             boolean inSpace = sputnik.getLevel().dimension() == dev.devce.rocketnautics.content.physics.SpaceTransitionHandler.SPACE_DIM;
             data.put("gravity", inSpace ? 0.0 : -9.81);
         }
-
+        
         return data;
     }
 }

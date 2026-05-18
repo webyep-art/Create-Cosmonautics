@@ -1,5 +1,7 @@
 package dev.devce.websnodelib.api;
 
+import net.minecraft.client.gui.GuiGraphics;
+
 /**
  * The base class for all interactive and visual components inside a node (WNode).
  * Elements are arranged vertically within the node body.
@@ -10,10 +12,6 @@ public abstract class WElement {
     protected int height;
     protected int padding = 2;
     protected int margin = 2;
-    protected WNode parentNode;
-
-    public void setParentNode(WNode node) { this.parentNode = node; }
-    public WNode getParentNode() { return parentNode; }
 
     /**
      * Renders the element at the specified logical coordinates.
@@ -24,8 +22,7 @@ public abstract class WElement {
      * @param mouseY Current transformed mouse Y.
      * @param partialTick Animation frame fraction.
      */
-    @net.neoforged.api.distmarker.OnlyIn(net.neoforged.api.distmarker.Dist.CLIENT)
-    public abstract void render(net.minecraft.client.gui.GuiGraphics graphics, int x, int y, int mouseX, int mouseY, float partialTick);
+    public abstract void render(GuiGraphics graphics, int x, int y, int mouseX, int mouseY, float partialTick);
 
     /**
      * @return Total width including padding.

@@ -34,7 +34,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Stream;
 
-public class ShipCopyPasteCommand {
+public final class ShipCopyPasteCommand {
     private record ClipboardEntry(CompoundTag tag, ChunkPos sourcePlotPos) {}
     private static final Map<UUID, ClipboardEntry> clipboard = new HashMap<>();
     

@@ -1,15 +1,16 @@
 
 
-// Webhook test commit
 package dev.devce.rocketnautics.client;
 
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
+import dev.devce.rocketnautics.RocketConfig;
 import com.mojang.blaze3d.vertex.PoseStack;
 import dev.devce.rocketnautics.RocketNautics;
 import dev.devce.rocketnautics.SkyDataHandler;
+import dev.devce.rocketnautics.content.orbit.DeepSpaceData;
 import dev.devce.rocketnautics.network.PlanetMapRequestPayload;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
@@ -61,7 +62,7 @@ public class SkyHandler {
         if (event.getStage() != RenderLevelStageEvent.Stage.AFTER_SKY) return;
         
         Minecraft mc = Minecraft.getInstance();
-        if (mc.level == null || mc.player == null) return;
+        if (mc.level == null || mc.player == null || DeepSpaceData.isDeepSpace()) return;
 
         Camera camera = mc.gameRenderer.getMainCamera();
         double camY = camera.getPosition().y + SkyDataHandler.getHeightOffsetForLevel(mc.level.dimension());
@@ -84,7 +85,7 @@ public class SkyHandler {
 
         int renderDist = mc.options.renderDistance().get();
         // Calculate parallax based on altitude: higher means less parallax (planet seems further)
-        float parallaxFactor = (float) (renderDist / Math.max(100.0, camY)); 
+        float parallaxFactor = (float) (renderDist / Math.max(100.0, camY));
         double camX = camera.getPosition().x;
         double camZ = camera.getPosition().z;
 
@@ -92,7 +93,7 @@ public class SkyHandler {
         ensurePlanetTexObj();
         ensureCloudTexture();
         ensureHaloTexture();
-        
+
         // Request map updates from server if player moved too far
         updatePlanetTex(camX, camY, camZ);
         
@@ -100,11 +101,11 @@ public class SkyHandler {
         if (texFade > 0) {
             texFade = Math.max(0, texFade - event.getPartialTick().getRealtimeDeltaTicks() / 20);
         }
-        
+
         // Render planet with layered effects (Map + Clouds + Halo)
         renderPlanet(PLANET_TEXTURE_OBJ_LAST, camX, camY, camZ, renderDist, parallaxFactor, matrix, texFade * visibility);
         renderPlanet(PLANET_TEXTURE_OBJ, camX, camY, camZ, renderDist, parallaxFactor, matrix, (1 - texFade) * visibility);
-        
+
         poseStack.popPose();
     }
 
@@ -113,7 +114,7 @@ public class SkyHandler {
      */
     private static void renderPlanet(PlanetRenderInfo planet, double camX, double camY, double camZ, float renderDist, float parallaxFactor, Matrix4f matrix, float visibility) {
         if (visibility <= 0) return;
-        
+
         // Calculate relative position based on parallax
         float relX = (float) ((planet.getCenterX() - camX) * parallaxFactor);
         float relY = -renderDist; // Render "below" the player
@@ -136,7 +137,7 @@ public class SkyHandler {
         RenderSystem.depthMask(false);
         RenderSystem.disableDepthTest();
         RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
-        
+
         // --- Layer 1: Planet Surface Map ---
         if (planet.getTexID() != null) {
             RenderSystem.setShaderTexture(0, planet.getTexID());
@@ -228,10 +229,8 @@ public class SkyHandler {
         }
     }
 
-    private static int getMaximumScale() {
-        
-        
-        return 100;
+    public static int getMaximumScale() {
+        return RocketConfig.CLIENT.planetRenderMaximumScale.getAsInt();
     }
 
     private static void updatePlanetTex(double camX, double camY, double camZ) {
@@ -342,23 +341,7 @@ public class SkyHandler {
                             colorIdx = mapDataNegXNegZ[sampleX + sampleY * dataSize];
                         }
                     }
-                    int r = 30, g = 120, b = 40;
-                    switch (colorIdx) {
-                        case 0: r = 10; g = 40; b = 120; break;
-                        case 1: r = 20; g = 80; b = 180; break;
-                        case 2: r = 210; g = 190; b = 140; break;
-                        case 3: r = 200; g = 180; b = 100; break;
-                        case 4: r = 30; g = 120; b = 40; break;
-                        case 5: r = 20; g = 90; b = 30; break;
-                        case 6: r = 10; g = 70; b = 20; break;
-                        case 7: r = 20; g = 60; b = 40; break;
-                        case 8: r = 220; g = 220; b = 230; break;
-                        case 9: r = 180; g = 80; b = 30; break;
-                        case 10: r = 120; g = 120; b = 120; break;
-                    }
-                    
-                    int color = (255 << 24) | (b << 16) | (g << 8) | r;
-                    image.setPixelRGBA(x, y, color);
+                    image.setPixelRGBA(x, y, PlanetColors.getPackedColor(colorIdx));
                 }
             }
             
