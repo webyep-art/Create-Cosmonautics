@@ -259,19 +259,19 @@ public class RocketNodes {
             
             node.setEvaluator(n -> {
                 if (n.getParentGraph().getContext() instanceof SputnikBlockEntity sputnik) {
+                    if (sputnik.getLevel().isClientSide()) return;
                     if (freq1.getStack().isEmpty() || freq2.getStack().isEmpty()) return;
-                    
+
                     double signal = n.getInputs().get(0).getValue();
                     dev.devce.rocketnautics.content.blocks.LinkedSignalHandler.setSignal(
-                        sputnik.getLevel(), 
-                        freq1.getStack(), 
-                        freq2.getStack(), 
-                        sputnik.getBlockPos(), 
+                        sputnik.getLevel(),
+                        freq1.getStack(),
+                        freq2.getStack(),
+                        sputnik.getBlockPos(),
                         signal
                     );
                 }
-            });
-            return node;
+            });            return node;
         });
 
         // Receiver
@@ -291,6 +291,8 @@ public class RocketNodes {
             
             node.setEvaluator(n -> {
                 if (n.getParentGraph().getContext() instanceof SputnikBlockEntity sputnik) {
+                    if (sputnik.getLevel().isClientSide()) return;
+                    
                     if (freq1.getStack().isEmpty() || freq2.getStack().isEmpty()) {
                         n.getOutputs().get(0).setValue(0);
                         return;

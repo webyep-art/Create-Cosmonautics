@@ -76,8 +76,8 @@ public class WGraph {
                 net.minecraft.resources.ResourceLocation type = net.minecraft.resources.ResourceLocation.parse(nTag.getString("typeId"));
                 WNode newNode = NodeRegistry.createNode(type, nTag.getInt("x"), nTag.getInt("y"));
                 if (newNode != null) {
-                    newNode.load(nTag);
                     addNode(newNode);
+                    newNode.load(nTag);
                 }
             }
         }
