@@ -66,6 +66,85 @@ public final class StandardUniverseProvider {
                         })
                         .setCircularOrbit("overworld", lunarMonthInOverworldDays * overworldDaynightCycleLengthSeconds, Vector3D.PLUS_J)
                         .radiusFromDistance(d -> (d - overworldRadius) * 3 / 40) // roughly based on the angular size of the moon in the overworld
-                        .setTidalLocked());
+                        .setTidalLocked())
+                .cubePlanet(p -> p
+                        .setFrameName("mars")
+                        .setAccelerationAtSurface(3.7)
+                        .setRadius(overworldRadius * 0.53) // Mars is smaller than Earth
+                        .setCircularOrbit("sol", (int)(overworldOrbitalYearInOverworldDays * 1.88) * overworldDaynightCycleLengthSeconds, Vector3D.PLUS_J)
+                        .setRotationAxis(down)
+                        .setTicksPerRevolution(24_600) // ~24.6 hours
+                        .setRenderDataOverride(i -> {
+                            byte[] data = new byte[PlanetColors.ARRAY_SIZE];
+                            for (int yCoord = 0; yCoord < 256; yCoord++) {
+                                for (int xCoord = 0; xCoord < 256; xCoord++) {
+                                    if (yCoord < 24 || yCoord > 232) {
+                                        data[xCoord + 256 * yCoord] = PlanetColors.MARS_ICE;
+                                    } else {
+                                        double nx = xCoord / 12.0;
+                                        double ny = yCoord / 12.0;
+                                        double noise = Math.sin(nx) * Math.cos(ny) + 0.5 * Math.sin(nx * 2.3) * Math.cos(ny * 1.7);
+                                        if (noise > 0.15) {
+                                            data[xCoord + 256 * yCoord] = PlanetColors.MARS_DARK_RED;
+                                        } else {
+                                            data[xCoord + 256 * yCoord] = PlanetColors.MARS_RED;
+                                        }
+                                    }
+                                }
+                            }
+                            return data;
+                        }))
+                .cubePlanet(p -> p
+                        .setFrameName("gas_giant")
+                        .setAccelerationAtSurface(24.8)
+                        .setRadius(overworldRadius * 4.2) // Jupiter is massive!
+                        .setCircularOrbit("sol", overworldOrbitalYearInOverworldDays * 4 * overworldDaynightCycleLengthSeconds, Vector3D.PLUS_J)
+                        .setRotationAxis(down)
+                        .setTicksPerRevolution(10_000) // Spins very quickly
+                        .setRenderDataOverride(i -> {
+                            byte[] data = new byte[PlanetColors.ARRAY_SIZE];
+                            for (int yCoord = 0; yCoord < 256; yCoord++) {
+                                for (int xCoord = 0; xCoord < 256; xCoord++) {
+                                    double spotDx = (xCoord - 150) / 25.0;
+                                    double spotDy = (yCoord - 140) / 12.0;
+                                    if (spotDx * spotDx + spotDy * spotDy < 1.0) {
+                                        data[xCoord + 256 * yCoord] = PlanetColors.GAS_RED;
+                                    } else {
+                                        double stripeVal = Math.sin(yCoord * 0.15) + Math.cos(yCoord * 0.05 + xCoord * 0.02) * 0.3;
+                                        if (stripeVal > 0.4) {
+                                            data[xCoord + 256 * yCoord] = PlanetColors.GAS_ORANGE;
+                                        } else if (stripeVal < -0.4) {
+                                            data[xCoord + 256 * yCoord] = PlanetColors.GAS_BROWN;
+                                        } else {
+                                            data[xCoord + 256 * yCoord] = PlanetColors.GAS_YELLOW;
+                                        }
+                                    }
+                                }
+                            }
+                            return data;
+                        }))
+                .cubePlanet(p -> p
+                        .setFrameName("ice_world")
+                        .setAccelerationAtSurface(11.0)
+                        .setRadius(overworldRadius * 1.8) // Neptune-like
+                        .setCircularOrbit("sol", overworldOrbitalYearInOverworldDays * 8 * overworldDaynightCycleLengthSeconds, Vector3D.PLUS_J)
+                        .setRotationAxis(down)
+                        .setTicksPerRevolution(16_000)
+                        .setRenderDataOverride(i -> {
+                            byte[] data = new byte[PlanetColors.ARRAY_SIZE];
+                            for (int yCoord = 0; yCoord < 256; yCoord++) {
+                                for (int xCoord = 0; xCoord < 256; xCoord++) {
+                                    double wave = Math.sin(yCoord * 0.1) * Math.cos(xCoord * 0.05);
+                                    if (wave > 0.3) {
+                                        data[xCoord + 256 * yCoord] = PlanetColors.ICE_CYAN;
+                                    } else if (wave < -0.3) {
+                                        data[xCoord + 256 * yCoord] = PlanetColors.ICE_DARK_BLUE;
+                                    } else {
+                                        data[xCoord + 256 * yCoord] = PlanetColors.ICE_BLUE;
+                                    }
+                                }
+                            }
+                            return data;
+                        }));
     }
 }

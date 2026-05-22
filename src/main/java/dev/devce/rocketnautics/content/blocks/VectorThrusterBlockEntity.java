@@ -86,7 +86,7 @@ public class VectorThrusterBlockEntity extends RocketThrusterBlockEntity {
 
         for (Direction dir : DIRECTIONS) {
             if (dir.getAxis() != nozzle.getAxis()) {
-                int signal = level.getSignal(worldPosition.relative(dir), dir);
+                int signal = level.getSignal(worldPosition.relative(dir), dir.getOpposite());
                 float strength = signal * 0.033f;
                 gX += dir.getStepX() * strength;
                 gY += dir.getStepY() * strength;
@@ -220,5 +220,10 @@ public class VectorThrusterBlockEntity extends RocketThrusterBlockEntity {
 
     public float getGimbalZ() {
         return gimbalZ;
+    }
+
+    @Override
+    public String getPeripheralType() {
+        return "vector_engine";
     }
 }

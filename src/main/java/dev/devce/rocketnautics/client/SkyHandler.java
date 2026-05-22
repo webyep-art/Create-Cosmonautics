@@ -438,7 +438,7 @@ public class SkyHandler {
 
                 int bestBiome = PlanetColors.FALLBACK;
                 float maxInfluence = -1;
-                for (int b = 0; b < 11; b++) {
+                for (int b = 0; b < PlanetColors.getReservedCount(); b++) {
                     if (influence[b] > maxInfluence) {
                         maxInfluence = influence[b];
                         bestBiome = b;
@@ -496,13 +496,13 @@ public class SkyHandler {
         return image;
     }
 
-    private static ResourceLocation CLOUD_TEXTURE_ID = null;
+    public static ResourceLocation CLOUD_TEXTURE_ID = null;
     private static DynamicTexture CLOUD_TEXTURE_OBJ = null;
 
     private static ResourceLocation SONIC_BOOM_TEXTURE_ID = null;
     private static DynamicTexture SONIC_BOOM_TEXTURE_OBJ = null;
 
-    private static void ensureCloudTexture() {
+    public static void ensureCloudTexture() {
         if (CLOUD_TEXTURE_ID != null) return;
         Minecraft mc = Minecraft.getInstance();
         
@@ -590,7 +590,7 @@ public class SkyHandler {
                 // Subtract erosion primarily at the edges of the cloud formations
                 float erodedNoise = noise - (1.0f - noise) * erode;
                 
-                float threshold = 0.35f;
+                float threshold = 0.20f;
                 float density = 0.0f;
                 if (erodedNoise > threshold) {
                     density = (erodedNoise - threshold) / (1.0f - threshold);
@@ -778,10 +778,10 @@ public class SkyHandler {
         }
     }
 
-    private static ResourceLocation HALO_TEXTURE_ID = null;
+    public static ResourceLocation HALO_TEXTURE_ID = null;
     private static boolean haloV5 = false;
 
-    private static void ensureHaloTexture() {
+    public static void ensureHaloTexture() {
         if (HALO_TEXTURE_ID != null && haloV5) return;
         Minecraft mc = Minecraft.getInstance();
         int size = 256;
@@ -828,11 +828,11 @@ public class SkyHandler {
         image.close();
     }
 
-    private static ResourceLocation LIGHT_OVERLAY_TEXTURE_ID = null;
+    public static ResourceLocation LIGHT_OVERLAY_TEXTURE_ID = null;
     private static DynamicTexture LIGHT_OVERLAY_TEXTURE_OBJ = null;
     private static float lastUpdatedAngle = -1;
 
-    private static void ensureLightOverlayTexture(float celestialAngle) {
+    public static void ensureLightOverlayTexture(float celestialAngle) {
         if (LIGHT_OVERLAY_TEXTURE_ID != null && Math.abs(celestialAngle - lastUpdatedAngle) < 0.001f) {
             return;
         }
@@ -863,21 +863,41 @@ public class SkyHandler {
                 
                 int r = 0, g = 0, b = 0, a = 0;
                 
-                if (dSun < 0) {
-                    // Shadow side: deep dark navy blue shadow (much darker!)
-                    r = 4;
-                    g = 6;
-                    b = 18;
-                    a = (int) (240.0 * (-dSun));
-                } else if (dSun > 0.8) {
-                    // Sunlight specular highlight: warm golden glow
+                // --- 1. Pixelated Toon/Cell Shading Shadow + Specular Highlight ---
+                if (dSun > 0.65) {
+                    // Brilliant star-facing sunlight overlay (warm tint)
                     r = 255;
-                    g = 240;
+                    g = 245;
                     b = 200;
-                    a = (int) (35.0 * ((dSun - 0.8) / 0.2));
+                    a = 55;
+                } else if (dSun > 0.45) {
+                    // Dithered bright border to clear light
+                    if ((x + y) % 2 == 0) {
+                        r = 255;
+                        g = 245;
+                        b = 200;
+                        a = 35;
+                    }
+                } else if (dSun > 0.05) {
+                    // Direct illumination - clear, shows raw planet texture
+                    r = 0; g = 0; b = 0; a = 0;
+                } else if (dSun > -0.12) {
+                    // Soft dithered terminator line
+                    if ((x + y) % 2 == 0) {
+                        r = 6;
+                        g = 8;
+                        b = 25;
+                        a = 130;
+                    }
+                } else {
+                    // Deep dark indigo space shadow
+                    r = 4;
+                    g = 5;
+                    b = 18;
+                    a = 230;
                 }
                 
-                // Atmospheric crescent glow at the edges (r >= 0.83)
+                // --- 2. Pixelated Atmospheric Edge Glow ---
                 double rDist = Math.sqrt(rSq);
                 if (rDist >= 0.83) {
                     double edgeFactor = (rDist - 0.83) / 0.17; // 0.0 to 1.0
@@ -891,22 +911,27 @@ public class SkyHandler {
                         int gb = 255;
                         int ga = (int) (225.0 * intensity);
                         
-                        r = (int) (r * (1.0 - intensity) + gr * intensity);
-                        g = (int) (g * (1.0 - intensity) + gg * intensity);
-                        b = (int) (b * (1.0 - intensity) + gb * intensity);
-                        a = Math.max(a, ga);
+                        // Pixelate the atmosphere glow!
+                        if (ga > 20) {
+                            r = (int) (r * (1.0 - intensity) + gr * intensity);
+                            g = (int) (g * (1.0 - intensity) + gg * intensity);
+                            b = (int) (b * (1.0 - intensity) + gb * intensity);
+                            a = Math.max(a, ga);
+                        }
                     } else {
-                        // Moonlight atmospheric glow: cool neon purple
+                        // Shadow-side atmospheric glow: cool space violet (dithered/pixelated)
                         double intensity = edgeFactor * Math.max(0.0, (-dSun - 0.2) / 1.2);
-                        int gr = 130;
-                        int gg = 80;
+                        int gr = 120;
+                        int gg = 75;
                         int gb = 230;
                         int ga = (int) (180.0 * intensity);
                         
-                        r = (int) (r * (1.0 - intensity) + gr * intensity);
-                        g = (int) (g * (1.0 - intensity) + gg * intensity);
-                        b = (int) (b * (1.0 - intensity) + gb * intensity);
-                        a = Math.max(a, ga);
+                        if (ga > 20) {
+                            r = (int) (r * (1.0 - intensity) + gr * intensity);
+                            g = (int) (g * (1.0 - intensity) + gg * intensity);
+                            b = (int) (b * (1.0 - intensity) + gb * intensity);
+                            a = Math.max(a, ga);
+                        }
                     }
                 }
                 
@@ -1214,6 +1239,186 @@ public class SkyHandler {
         image.close();
     }
 
+    // --- Star Plasma Texture (animated, for orbital view of the Sun) ---
+    public static ResourceLocation STAR_PLASMA_TEXTURE_ID = null;
+    private static DynamicTexture STAR_PLASMA_TEXTURE_OBJ = null;
+    private static long lastPlasmaUpdateTick = -999;
+
+    // --- Fast, high-quality, lightweight 3D Perlin Noise with FBM and Domain Warping ---
+    private static class StarNoise {
+        private static final int[] p = new int[512];
+        private static final int[] permutation = {
+            151,160,137,91,90,15,131,13,201,95,96,53,194,233,7,225,140,36,103,30,69,142,8,99,37,240,21,10,23,
+            190,6,148,247,120,234,75,0,26,197,62,94,252,219,203,117,35,11,32,57,177,33,88,237,149,56,87,174,20,
+            125,136,171,168,68,175,74,165,71,134,139,48,27,166,77,146,158,231,83,111,229,122,60,211,133,230,220,
+            105,92,41,55,46,245,40,244,102,143,54,65,25,63,161,1,216,80,73,209,76,132,187,208,89,18,169,200,196,
+            135,130,116,188,159,86,164,100,109,198,173,186,3,64,52,217,226,250,124,123,5,202,38,147,118,126,255,
+            82,85,212,207,206,59,227,47,16,58,17,182,189,28,42,223,183,170,213,119,248,152,2,44,154,163,70,221,
+            153,101,155,167,43,172,9,129,22,39,253,19,98,108,110,79,113,224,232,178,185,112,104,218,246,97,228,
+            251,34,242,193,238,210,144,12,191,179,162,241,81,51,145,235,249,14,239,107,49,192,214,31,181,199,106,
+            157,184,84,204,176,115,121,50,45,127,4,150,254,138,236,205,93,222,114,67,29,24,72,243,141,128,195,78,
+            66,215,61,156,180
+        };
+        static {
+            for (int i = 0; i < 256; i++) {
+                p[256 + i] = p[i] = permutation[i];
+            }
+        }
+        private static double fade(double t) {
+            return t * t * t * (t * (t * 6 - 15) + 10);
+        }
+        private static double lerp(double t, double a, double b) {
+            return a + t * (b - a);
+        }
+        private static double grad(int hash, double x, double y, double z) {
+            int h = hash & 15;
+            double u = h < 8 ? x : y;
+            double v = h < 4 ? y : h == 12 || h == 14 ? x : z;
+            return ((h & 1) == 0 ? u : -u) + ((h & 2) == 0 ? v : -v);
+        }
+        public static double noise(double x, double y, double z) {
+            int X = (int) Math.floor(x) & 255;
+            int Y = (int) Math.floor(y) & 255;
+            int Z = (int) Math.floor(z) & 255;
+            x -= Math.floor(x);
+            y -= Math.floor(y);
+            z -= Math.floor(z);
+            double u = fade(x);
+            double v = fade(y);
+            double w = fade(z);
+            int A = p[X] + Y;
+            int AA = p[A] + Z;
+            int AB = p[A + 1] + Z;
+            int B = p[X + 1] + Y;
+            int BA = p[B] + Z;
+            int BB = p[B + 1] + Z;
+            return lerp(w, lerp(v, lerp(u, grad(p[AA], x, y, z),
+                                           grad(p[BA], x - 1, y, z)),
+                                   lerp(u, grad(p[AB], x, y - 1, z),
+                                           grad(p[BB], x - 1, y - 1, z))),
+                           lerp(v, lerp(u, grad(p[AA + 1], x, y, z - 1),
+                                           grad(p[BA + 1], x - 1, y, z - 1)),
+                                   lerp(u, grad(p[AB + 1], x, y - 1, z - 1),
+                                           grad(p[BB + 1], x - 1, y - 1, z - 1))));
+        }
+        
+        public static double fbm(double x, double y, double z, int octaves) {
+            double total = 0.0;
+            double amplitude = 1.0;
+            double frequency = 1.0;
+            double maxValue = 0.0;
+            for (int i = 0; i < octaves; i++) {
+                total += amplitude * noise(x * frequency, y * frequency, z * frequency);
+                maxValue += amplitude;
+                amplitude *= 0.5;
+                frequency *= 2.0;
+            }
+            return total / maxValue;
+        }
+
+        // Domain warping for turbulent fluid/plasma storm patterns!
+        public static double warpedNoise(double x, double y, double z) {
+            double qx = fbm(x, y, z, 3);
+            double qy = fbm(x + 5.2, y + 1.3, z + 2.8, 3);
+            double qz = fbm(x + 1.8, y + 6.7, z + 1.1, 3);
+
+            double rx = fbm(x + 4.0 * qx + 1.7, y + 4.0 * qy + 9.2, z + 4.0 * qz + 0.15, 3);
+            double ry = fbm(x + 4.0 * qx + 8.3, y + 4.0 * qy + 2.8, z + 4.0 * qz + 1.26, 3);
+            double rz = fbm(x + 4.0 * qx + 2.1, y + 4.0 * qy + 5.9, z + 4.0 * qz + 4.3, 3);
+
+            return fbm(x + 4.0 * rx, y + 4.0 * ry, z + 4.0 * rz, 4);
+        }
+    }
+
+    /** Call once per frame when the star is visible. Regenerates the boiling plasma every tick. */
+    public static void ensureStarPlasmaTexture() {
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.level == null) return;
+        long tick = mc.level.getGameTime();
+        if (STAR_PLASMA_TEXTURE_ID != null && tick == lastPlasmaUpdateTick) return;
+        lastPlasmaUpdateTick = tick;
+
+        int size = 64; // 64x64 pixelated plasma
+        NativeImage image = new NativeImage(size, size, false);
+
+        // Map animation time
+        double t = (tick % 10000) * 0.05;
+
+        for (int x = 0; x < size; x++) {
+            for (int y = 0; y < size; y++) {
+                float fx = x / (float) size;
+                float fy = y / (float) size;
+
+                // 2D to 3D Torus mapping for seamless wrapping in X and Y directions
+                double angleX = fx * 2.0 * Math.PI;
+                double angleY = fy * 2.0 * Math.PI;
+                double r1 = 1.0;
+                double r2 = 0.5;
+                double nx = (r1 + r2 * Math.cos(angleY)) * Math.cos(angleX);
+                double ny = (r1 + r2 * Math.cos(angleY)) * Math.sin(angleX);
+                double nz = r2 * Math.sin(angleY);
+
+                // Sample domain warped noise
+                double scale = 1.8;
+                double plasmaVal = StarNoise.warpedNoise(nx * scale, ny * scale, nz * scale + t);
+
+                // Remap from [-1, 1] to [0, 1]
+                float plasma = (float) ((plasmaVal + 1.0) * 0.5);
+
+                // Pixelate: snap to 12 brightness bands for beautiful premium shading
+                plasma = (float)(Math.floor(plasma * 12.0f)) / 12.0f;
+
+                // Color map: deep burning red sun spots -> flame orange -> golden yellow -> blinding white-cyan
+                int r, g, b;
+                if (plasma < 0.15f) {
+                    float p = plasma / 0.15f;
+                    r = (int)(95 + p * 60);
+                    g = (int)(2 + p * 8);
+                    b = (int)(p * 2);
+                } else if (plasma < 0.4f) {
+                    float p = (plasma - 0.15f) / 0.25f;
+                    r = 155 + (int)(p * 100);
+                    g = 10 + (int)(p * 90);
+                    b = 0;
+                } else if (plasma < 0.7f) {
+                    float p = (plasma - 0.4f) / 0.3f;
+                    r = 255;
+                    g = 100 + (int)(p * 120);
+                    b = (int)(p * 20);
+                } else if (plasma < 0.9f) {
+                    float p = (plasma - 0.7f) / 0.2f;
+                    r = 255;
+                    g = 220 + (int)(p * 35);
+                    b = 20 + (int)(p * 180);
+                } else {
+                    float p = (plasma - 0.9f) / 0.1f;
+                    r = 255;
+                    g = 255;
+                    b = 200 + (int)(p * 55);
+                }
+
+                r = Math.min(255, Math.max(0, r));
+                g = Math.min(255, Math.max(0, g));
+                b = Math.min(255, Math.max(0, b));
+
+                // NativeImage uses ABGR layout: alpha=255 (fully opaque)
+                int color = (255 << 24) | (b << 16) | (g << 8) | r;
+                image.setPixelRGBA(x, y, color);
+            }
+        }
+
+        if (STAR_PLASMA_TEXTURE_OBJ == null) {
+            // DynamicTexture takes ownership of the image — do NOT close it here
+            STAR_PLASMA_TEXTURE_OBJ = new DynamicTexture(image);
+            STAR_PLASMA_TEXTURE_ID = mc.getTextureManager().register("rocketnautics_star_plasma", STAR_PLASMA_TEXTURE_OBJ);
+            STAR_PLASMA_TEXTURE_OBJ.setFilter(false, false); // Pixelated!
+        } else {
+            // Replace the pixels via setPixels and re-upload
+            STAR_PLASMA_TEXTURE_OBJ.setPixels(image);
+            STAR_PLASMA_TEXTURE_OBJ.upload();
+        }
+    }
+
     private static boolean drawRotatingCubeFace(BufferBuilder buffer, Matrix4f matrix, 
                                                 float cx, float cy, float cz, 
                                                 float size, float spinAngle,
@@ -1372,7 +1577,7 @@ public class SkyHandler {
         return true;
     }
 
-    private static void renderSpaceStars(PoseStack poseStack, float visibility, Camera camera, float celestialAngle) {
+    public static void renderSpaceStars(PoseStack poseStack, float visibility, Camera camera, float celestialAngle) {
         ensureSpaceStars();
         Minecraft mc = Minecraft.getInstance();
         if (mc.level == null) return;
@@ -1940,5 +2145,133 @@ public class SkyHandler {
         RenderSystem.disableBlend();
 
         poseStack.popPose();
+    }
+
+    public static ResourceLocation NEBULA_TEXTURE_ID = null;
+    private static DynamicTexture NEBULA_TEXTURE_OBJ = null;
+
+    public static void ensureNebulaTexture() {
+        if (NEBULA_TEXTURE_ID != null) return;
+        Minecraft mc = Minecraft.getInstance();
+        int size = 256;
+        NativeImage image = new NativeImage(size, size, false);
+        
+        java.util.Random rand = new java.util.Random(42L);
+        Noise2D noiseGen = new Noise2D(64, rand);
+        
+        for (int y = 0; y < size; y++) {
+            for (int x = 0; x < size; x++) {
+                float u = (x / (float)size) * 3.0f;
+                float v = (y / (float)size) * 3.0f;
+                
+                float warpX = noiseGen.sample(u * 1.5f + 0.5f, v * 1.5f + 1.2f) * 1.2f;
+                float warpY = noiseGen.sample(u * 1.5f + 2.3f, v * 1.5f + 0.8f) * 1.2f;
+                
+                float tu = u + warpX;
+                float tv = v + warpY;
+                
+                float n1 = noiseGen.sample(tu, tv);
+                float n2 = noiseGen.sample(tu * 2.0f + 5.1f, tv * 2.0f + 3.7f) * 0.5f;
+                float n = n1 + n2; // 0.0 to 1.5
+                
+                double dx = (x - size / 2.0) / (size / 2.0);
+                double dy = (y - size / 2.0) / (size / 2.0);
+                double dist = Math.sqrt(dx * dx + dy * dy);
+                float vignette = (float) Math.max(0, 1.0 - dist * 1.2);
+                n *= vignette;
+                
+                int r = 0, g = 0, b = 0, alpha = 0;
+                if (n > 0.15f) {
+                    float density = (n - 0.15f) / 1.35f;
+                    // Gorgeous Deep Space Nebula Colors: Neon Purple, Cosmic Violet, Magenta, and Cyan!
+                    r = (int) (120 + density * 135);
+                    g = (int) (20 + density * 180);
+                    b = (int) (200 + density * 55);
+                    alpha = (int) (density * 130); // max opacity 130 for beautiful transparency
+                }
+                
+                int color = (alpha << 24) | (b << 16) | (g << 8) | r;
+                image.setPixelRGBA(x, y, color);
+            }
+        }
+        NEBULA_TEXTURE_OBJ = new DynamicTexture(image);
+        NEBULA_TEXTURE_ID = mc.getTextureManager().register("rocketnautics_nebula", NEBULA_TEXTURE_OBJ);
+        NEBULA_TEXTURE_OBJ.setFilter(true, false); // Bilinear filtering for soft gas clouds!
+        image.close();
+    }
+
+    public static void renderCosmicNebula(PoseStack poseStack, Camera camera, float celestialAngle) {
+        ensureNebulaTexture();
+        if (NEBULA_TEXTURE_ID == null) return;
+        
+        RenderSystem.enableBlend();
+        RenderSystem.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE);
+        RenderSystem.depthMask(false);
+        RenderSystem.disableDepthTest();
+        RenderSystem.disableCull();
+        
+        RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
+        RenderSystem.setShaderTexture(0, NEBULA_TEXTURE_ID);
+        
+        poseStack.pushPose();
+        // Center on camera by counteracting its rotation in rendering context
+        org.joml.Quaternionf invCamRot = new org.joml.Quaternionf(camera.rotation()).conjugate();
+        poseStack.mulPose(invCamRot);
+        
+        // Rotate extremely slowly, independent of stars
+        float slowAngle = (System.currentTimeMillis() % 1200000) / 1200000.0f * 360.0f;
+        poseStack.mulPose(com.mojang.math.Axis.YP.rotationDegrees(slowAngle));
+        
+        Matrix4f matrix = poseStack.last().pose();
+        Tesselator tesselator = Tesselator.getInstance();
+        BufferBuilder buffer = tesselator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+        
+        float size = 9.5f; // slightly larger than stars (radius 8) so stars sit in/in front of the nebula, but inside far clip plane!
+        float alpha = 0.45f; // soft overall visibility
+        
+        // Render large textured quads on 4 vertical sides and top/bottom to form a beautiful cosmic envelope
+        // Front
+        buffer.addVertex(matrix, -size, size, -size).setUv(0, 0).setColor(1.0f, 1.0f, 1.0f, alpha);
+        buffer.addVertex(matrix, -size, -size, -size).setUv(0, 1).setColor(1.0f, 1.0f, 1.0f, alpha);
+        buffer.addVertex(matrix, size, -size, -size).setUv(1, 1).setColor(1.0f, 1.0f, 1.0f, alpha);
+        buffer.addVertex(matrix, size, size, -size).setUv(1, 0).setColor(1.0f, 1.0f, 1.0f, alpha);
+        
+        // Back
+        buffer.addVertex(matrix, size, size, size).setUv(0, 0).setColor(1.0f, 1.0f, 1.0f, alpha);
+        buffer.addVertex(matrix, size, -size, size).setUv(0, 1).setColor(1.0f, 1.0f, 1.0f, alpha);
+        buffer.addVertex(matrix, -size, -size, size).setUv(1, 1).setColor(1.0f, 1.0f, 1.0f, alpha);
+        buffer.addVertex(matrix, -size, size, size).setUv(1, 0).setColor(1.0f, 1.0f, 1.0f, alpha);
+        
+        // Left
+        buffer.addVertex(matrix, -size, size, size).setUv(0, 0).setColor(1.0f, 1.0f, 1.0f, alpha);
+        buffer.addVertex(matrix, -size, -size, size).setUv(0, 1).setColor(1.0f, 1.0f, 1.0f, alpha);
+        buffer.addVertex(matrix, -size, -size, -size).setUv(1, 1).setColor(1.0f, 1.0f, 1.0f, alpha);
+        buffer.addVertex(matrix, -size, size, -size).setUv(1, 0).setColor(1.0f, 1.0f, 1.0f, alpha);
+        
+        // Right
+        buffer.addVertex(matrix, size, size, -size).setUv(0, 0).setColor(1.0f, 1.0f, 1.0f, alpha);
+        buffer.addVertex(matrix, size, -size, -size).setUv(0, 1).setColor(1.0f, 1.0f, 1.0f, alpha);
+        buffer.addVertex(matrix, size, -size, size).setUv(1, 1).setColor(1.0f, 1.0f, 1.0f, alpha);
+        buffer.addVertex(matrix, size, size, size).setUv(1, 0).setColor(1.0f, 1.0f, 1.0f, alpha);
+        
+        // Top
+        buffer.addVertex(matrix, -size, size, size).setUv(0, 0).setColor(1.0f, 1.0f, 1.0f, alpha);
+        buffer.addVertex(matrix, -size, size, -size).setUv(0, 1).setColor(1.0f, 1.0f, 1.0f, alpha);
+        buffer.addVertex(matrix, size, size, -size).setUv(1, 1).setColor(1.0f, 1.0f, 1.0f, alpha);
+        buffer.addVertex(matrix, size, size, size).setUv(1, 0).setColor(1.0f, 1.0f, 1.0f, alpha);
+
+        // Bottom
+        buffer.addVertex(matrix, -size, -size, -size).setUv(0, 0).setColor(1.0f, 1.0f, 1.0f, alpha);
+        buffer.addVertex(matrix, -size, -size, size).setUv(0, 1).setColor(1.0f, 1.0f, 1.0f, alpha);
+        buffer.addVertex(matrix, size, -size, size).setUv(1, 1).setColor(1.0f, 1.0f, 1.0f, alpha);
+        buffer.addVertex(matrix, size, -size, -size).setUv(1, 0).setColor(1.0f, 1.0f, 1.0f, alpha);
+
+        BufferUploader.drawWithShader(buffer.buildOrThrow());
+        
+        poseStack.popPose();
+        
+        RenderSystem.enableDepthTest();
+        RenderSystem.depthMask(true);
+        RenderSystem.enableCull();
     }
 }

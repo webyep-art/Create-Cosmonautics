@@ -81,6 +81,7 @@ public class SpaceTransitionHandler {
 
     public static final int CHUNK_LOADING_PARTITION_SIZES = 16;
     public static final double TRANSITION_SAFE_OFFSET = 1000.0;
+    public static final double OVERWORLD_SPACE_Y = 20000.0;
 
     private static final Deque<Runnable> TICK_TASKS = new ArrayDeque<>();
 

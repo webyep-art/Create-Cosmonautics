@@ -6,7 +6,7 @@ import net.minecraft.world.level.Level;
 
 import dev.devce.rocketnautics.api.peripherals.IPeripheral;
 
-public interface IThruster {
+public interface IThruster extends IPeripheral {
     boolean isActive();
     boolean isRemoved();
     BlockPos getBlockPos();

@@ -761,4 +761,9 @@ public class RocketThrusterBlockEntity extends SmartBlockEntity implements Block
     public float getFlow() {
         return fuelThrottle;
     }
+
+    @Override
+    public String getPeripheralType() {
+        return "thruster";
+    }
 }

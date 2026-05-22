@@ -28,7 +28,7 @@ public final class DeepSpaceTexture {
 
         DynamicTexture constructed = new DynamicTexture(image);
         ResourceLocation claimed = mc.getTextureManager().register("rocketnautics_deep_space_planet", constructed);
-        constructed.setFilter(true, false);
+        constructed.setFilter(false, false);
         image.close();
         return new DeepSpaceTexture(constructed, claimed);
     }

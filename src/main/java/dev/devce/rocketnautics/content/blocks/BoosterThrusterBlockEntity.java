@@ -497,4 +497,9 @@ public class BoosterThrusterBlockEntity extends SmartBlockEntity implements Bloc
     public float getFlow() {
         return isActive() ? 1.0f : 0.0f;
     }
+
+    @Override
+    public String getPeripheralType() {
+        return "booster";
+    }
 }

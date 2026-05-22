@@ -145,4 +145,9 @@ public class RCSThrusterBlockEntity extends RocketThrusterBlockEntity {
     public void remove() {
         super.remove();
     }
+
+    @Override
+    public String getPeripheralType() {
+        return "rcs";
+    }
 }

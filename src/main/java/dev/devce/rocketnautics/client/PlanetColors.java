@@ -25,6 +25,19 @@ public final class PlanetColors {
     public static final byte SUN_1;
     public static final byte MOON_1;
 
+    public static final byte MARS_RED;
+    public static final byte MARS_DARK_RED;
+    public static final byte MARS_ICE;
+
+    public static final byte GAS_ORANGE;
+    public static final byte GAS_BROWN;
+    public static final byte GAS_YELLOW;
+    public static final byte GAS_RED;
+
+    public static final byte ICE_BLUE;
+    public static final byte ICE_CYAN;
+    public static final byte ICE_DARK_BLUE;
+
     static {
         registerColor(0);
         // overworld
@@ -52,6 +65,22 @@ public final class PlanetColors {
         SUN_1 = addColor(250, 230, 90);
         // moon
         MOON_1 = addColor(160, 160, 160);
+
+        // mars
+        MARS_RED = addColor(185, 80, 45);
+        MARS_DARK_RED = addColor(125, 45, 25);
+        MARS_ICE = addColor(245, 240, 240);
+
+        // gas giant
+        GAS_ORANGE = addColor(215, 120, 45);
+        GAS_BROWN = addColor(140, 75, 30);
+        GAS_YELLOW = addColor(235, 185, 90);
+        GAS_RED = addColor(175, 40, 30);
+
+        // ice world
+        ICE_BLUE = addColor(35, 75, 195);
+        ICE_CYAN = addColor(95, 185, 235);
+        ICE_DARK_BLUE = addColor(15, 35, 115);
     }
 
     public static byte addColor(int r, int g, int b) {
