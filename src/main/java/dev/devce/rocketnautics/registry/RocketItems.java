@@ -31,6 +31,9 @@ public class RocketItems {
             .tag(Tags.Items.MUSIC_DISCS)
             .register();
 
+    public static final ItemEntry<RocketItem> PARACHUTE_CAPSULE = REGISTRATE.item("parachute_capsule", RocketItem::new)
+            .register();
+
     public static final ItemEntry<CreditsBookItem> CREDITS_BOOK = REGISTRATE.item("credits_book", CreditsBookItem::new)
             .properties(p -> p.stacksTo(1))
             .model((ctx, prov) -> {})

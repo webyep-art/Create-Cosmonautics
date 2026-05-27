@@ -41,6 +41,14 @@
   "item.rocketnautics.jetpack.tooltip.summary": "Для тех, кому гравитация кажется слишком навязчивой. Осторожно: не использовать как личный обогреватель.",
   "item.rocketnautics.jetpack.tooltip.condition1": "Техническая сводка",
   "item.rocketnautics.jetpack.tooltip.behaviour1": "Носимая полетная система. Нажмите [G] для переключения режимов. Использует топливо для создания тяги. Удерживайте [Пробел] для (краткого) преодоления законов физики.",
+
+  "block.rocketnautics.parachute_case": "Кейс для парашюта",
+  "block.rocketnautics.parachute_case.funny": "Активируется редстоуном, чтобы замедлить ваше неизбежное падение.",
+  "block.rocketnautics.parachute_case.summary": "Автоматически раскрывает парашют при получении сигнала редстоуна.",
+  "block.rocketnautics.parachute_capsule": "Капсула для парашюта",
+  "block.rocketnautics.parachute_capsule.funny": "Защищает и удерживает парашютный пакет до раскрытия.",
+  "block.rocketnautics.parachute_capsule.summary": "Компактная капсула, предназначенная для безопасного хранения парашюта перед запуском.",
+
   "block.rocketnautics.titanium_ore": "Титановая руда",
   "block.rocketnautics.titanium_ore.funny": "Основа ваших будущих провальных космических миссий.",
   "block.rocketnautics.titanium_ore.summary": "Редкая руда, встречающаяся на большой высоте или глубоко под землей. Необходима для создания прочных и легких аэрокосмических компонентов.",

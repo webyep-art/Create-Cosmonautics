@@ -1,0 +1,52 @@
+{
+  "multipart": [
+    {
+      "when": { "facing": "up" },
+      "apply": { "model": "rocketnautics:block/parachuteblok" }
+    },
+    {
+      "when": { "facing": "down" },
+      "apply": { "model": "rocketnautics:block/parachuteblok", "x": 180 }
+    },
+    {
+      "when": { "facing": "north" },
+      "apply": { "model": "rocketnautics:block/parachuteblok", "x": 90 }
+    },
+    {
+      "when": { "facing": "south" },
+      "apply": { "model": "rocketnautics:block/parachuteblok", "x": 90, "y": 180 }
+    },
+    {
+      "when": { "facing": "west" },
+      "apply": { "model": "rocketnautics:block/parachuteblok", "x": 90, "y": 270 }
+    },
+    {
+      "when": { "facing": "east" },
+      "apply": { "model": "rocketnautics:block/parachuteblok", "x": 90, "y": 90 }
+    },
+    {
+      "when": { "has_parachute": "true", "open": "false", "facing": "up" },
+      "apply": { "model": "rocketnautics:block/parachutecapsule" }
+    },
+    {
+      "when": { "has_parachute": "true", "open": "false", "facing": "down" },
+      "apply": { "model": "rocketnautics:block/parachutecapsule", "x": 180 }
+    },
+    {
+      "when": { "has_parachute": "true", "open": "false", "facing": "north" },
+      "apply": { "model": "rocketnautics:block/parachutecapsule", "x": 90 }
+    },
+    {
+      "when": { "has_parachute": "true", "open": "false", "facing": "south" },
+      "apply": { "model": "rocketnautics:block/parachutecapsule", "x": 90, "y": 180 }
+    },
+    {
+      "when": { "has_parachute": "true", "open": "false", "facing": "west" },
+      "apply": { "model": "rocketnautics:block/parachutecapsule", "x": 90, "y": 270 }
+    },
+    {
+      "when": { "has_parachute": "true", "open": "false", "facing": "east" },
+      "apply": { "model": "rocketnautics:block/parachutecapsule", "x": 90, "y": 90 }
+    }
+  ]
+}
