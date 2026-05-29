@@ -37,6 +37,7 @@ public abstract class SubLevelPhysicsSystemMixin {
         Vector3d correction = handle.getLinearVelocity(new Vector3d());
         if (handling == null) {
             handle.addLinearAndAngularVelocity(correction.negate(), new Vector3d());
+            return;
         }
         Vector3dc center = handling.getCenter();
         Vector3d offset = position.sub(center, new Vector3d());
