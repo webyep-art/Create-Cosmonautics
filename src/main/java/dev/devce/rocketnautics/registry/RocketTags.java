@@ -8,7 +8,6 @@ import dev.devce.rocketnautics.RocketNautics;
 import net.createmod.catnip.lang.Lang;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.tags.BiomeTags;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
@@ -139,7 +138,8 @@ public class RocketTags {
     public enum BlockTags {
         THRUSTERS,
         RILLE_CARVABLE,
-        CRATER_CARVABLE;
+        CRATER_CARVABLE,
+        GENERIC_CARVABLE;
 
         public final TagKey<Block> tag;
 

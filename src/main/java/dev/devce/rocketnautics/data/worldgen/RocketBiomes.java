@@ -17,6 +17,7 @@ public class RocketBiomes {
     public static ResourceKey<Biome> LUNAR_AGED_CHASM = register("lunar_aged_chasm");
     public static ResourceKey<Biome> LUNAR_BASALT_SPIKES = register("lunar_basalt_spikes");
     public static ResourceKey<Biome> LUNAR_AGED_SPIKES = register("lunar_aged_spikes");
+    public static ResourceKey<Biome> LUNAR_MEGAREGOLITH = register("lunar_megaregolith");
 
     public static void bootstrap(BootstrapContext<Biome> context) {
         HolderGetter<PlacedFeature> features = context.lookup(Registries.PLACED_FEATURE);
@@ -27,6 +28,7 @@ public class RocketBiomes {
         context.register(LUNAR_AGED_CHASM, OverworldMoonBiomes.lunarAgedChasm(features, carvers));
         context.register(LUNAR_BASALT_SPIKES, OverworldMoonBiomes.lunarBasaltSpikes(features, carvers));
         context.register(LUNAR_AGED_SPIKES, OverworldMoonBiomes.lunarAgedSpikes(features, carvers));
+        context.register(LUNAR_MEGAREGOLITH, OverworldMoonBiomes.lunarMegaregolith(features, carvers));
     }
 
     private static ResourceKey<Biome> register(String p_48229_) {

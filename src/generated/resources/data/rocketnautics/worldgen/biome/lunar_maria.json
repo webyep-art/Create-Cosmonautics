@@ -3,7 +3,8 @@
     "air": [
       "rocketnautics:straight_rille",
       "rocketnautics:sinuous_rille",
-      "rocketnautics:standard_crater"
+      "rocketnautics:standard_crater",
+      "rocketnautics:moon/maria_caves"
     ]
   },
   "downfall": 0.0,

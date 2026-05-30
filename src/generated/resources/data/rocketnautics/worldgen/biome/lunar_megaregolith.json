@@ -1,6 +1,11 @@
 {
   "carvers": {
-    "air": "rocketnautics:moon/canyon"
+    "air": [
+      "rocketnautics:standard_crater",
+      "rocketnautics:straight_rille",
+      "rocketnautics:sinuous_rille",
+      "rocketnautics:standard_crater"
+    ]
   },
   "downfall": 0.0,
   "effects": {
@@ -11,8 +16,7 @@
   },
   "features": [
     [
-      "rocketnautics:moon/small_aged_columns",
-      "rocketnautics:moon/large_aged_columns"
+      "rocketnautics:moon/rock"
     ]
   ],
   "has_precipitation": false,

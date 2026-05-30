@@ -3,8 +3,12 @@ package dev.devce.rocketnautics.api.orbit;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import dev.devce.rocketnautics.client.DeepSpaceHandler;
 import dev.devce.rocketnautics.content.RocketDimensions;
+import dev.devce.rocketnautics.content.orbit.DeepSpaceData;
 import dev.devce.rocketnautics.content.orbit.universe.CubePlanet;
+import dev.devce.rocketnautics.content.orbit.universe.PlanetDimensionData;
+import dev.devce.rocketnautics.content.orbit.universe.PlanetExtras;
 import dev.devce.rocketnautics.content.orbit.universe.UniverseDefinition;
 import io.netty.buffer.ByteBuf;
 import it.unimi.dsi.fastutil.Pair;
@@ -283,9 +287,26 @@ public class DeepSpaceHelper {
         return EPOCH.shiftedBy(TICK.multiply(ticks));
     }
 
-    public static boolean shouldOverrideLevelTime(UniverseDefinition universe, Level level) {
-        CubePlanet planet = universe.getPlanetByDimension(level.dimension());
-        return planet != null && planet.linkedDimension() != null && planet.linkedDimension().controlsDimensionDayTime();
+    public static Optional<UniverseDefinition> getUniverse(@NotNull Level level) {
+        if (level.getServer() != null) {
+            return Optional.of(DeepSpaceData.getInstance(level.getServer()).getUniverse());
+        } else {
+            return Optional.ofNullable(DeepSpaceHandler.getUniverse());
+        }
+    }
+
+    public static Optional<PlanetDimensionData> getDataForDimension(@NotNull Level level) {
+        return getUniverse(level).map(u -> u.getPlanetByDimension(level.dimension()))
+                .map(CubePlanet::linkedDimension);
+    }
+
+    public static Optional<PlanetExtras> getExtrasForDimension(@NotNull Level level) {
+        return getUniverse(level).map(u -> u.getPlanetByDimension(level.dimension()))
+                .map(CubePlanet::extras);
+    }
+
+    public static boolean shouldOverrideLevelTime(@NotNull Level level) {
+        return getDataForDimension(level).map(PlanetDimensionData::controlsDimensionDayTime).orElse(false);
     }
 
     public static void checkAndOverrideLevelTime(UniverseDefinition universe, AbsoluteDate date, Level level, LongConsumer overrider) {

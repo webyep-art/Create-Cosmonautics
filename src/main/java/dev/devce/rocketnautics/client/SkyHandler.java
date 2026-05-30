@@ -8,11 +8,13 @@ import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
 import dev.devce.rocketnautics.RocketConfig;
-import com.mojang.blaze3d.vertex.PoseStack;
 import dev.devce.rocketnautics.RocketNautics;
 import dev.devce.rocketnautics.SkyDataHandler;
 import dev.devce.rocketnautics.api.orbit.DeepSpaceHelper;
+import dev.devce.rocketnautics.content.orbit.universe.PlanetExtras;
 import dev.devce.rocketnautics.network.PlanetMapRequestPayload;
+import dev.ryanhcode.sable.api.sublevel.SubLevelContainer;
+import dev.ryanhcode.sable.sublevel.SubLevel;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GameRenderer;
@@ -27,11 +29,11 @@ import net.neoforged.neoforge.client.event.ViewportEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
 import org.joml.Matrix4f;
 import org.joml.Quaternionf;
-import org.joml.Vector3f;
 import org.joml.Vector3d;
-import dev.ryanhcode.sable.api.sublevel.SubLevelContainer;
-import dev.ryanhcode.sable.sublevel.SubLevel;
+import org.joml.Vector3f;
+
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -100,8 +102,6 @@ public class SkyHandler {
 
         Matrix4f matrix = poseStack.last().pose();
 
-        // Calculate parallax based on altitude: higher means less parallax (planet seems further)
-        float parallaxFactor = (float) (SKYBOX_DISTANCE / Math.max(100.0, camY));
         double camX = camera.getPosition().x;
         double camZ = camera.getPosition().z;
 
@@ -119,32 +119,34 @@ public class SkyHandler {
         }
 
         // Render planet with layered effects (Map + Clouds + Halo)
-        renderPlanet(PLANET_TEXTURE_OBJ_LAST, camX, camY, camZ, parallaxFactor, matrix, texFade * visibility, celestialAngle);
-        renderPlanet(PLANET_TEXTURE_OBJ, camX, camY, camZ, parallaxFactor, matrix, (1 - texFade) * visibility, celestialAngle);
+        renderPlanet(PLANET_TEXTURE_OBJ_LAST, camX, camY, camZ, matrix, texFade * visibility, celestialAngle);
+        renderPlanet(PLANET_TEXTURE_OBJ, camX, camY, camZ, matrix, (1 - texFade) * visibility, celestialAngle);
         poseStack.popPose();
     }
 
     /**
      * Renders the planet quad with Map, Clouds, and Halo layers.
      */
-    private static void renderPlanet(PlanetRenderInfo planet, double camX, double camY, double camZ, float parallaxFactor, Matrix4f matrix, float visibility, float celestialAngle) {
+    private static void renderPlanet(PlanetRenderInfo planet, double camX, double camY, double camZ, Matrix4f matrix, float visibility, float celestialAngle) {
         if (visibility <= 0) return;
-
-        // Calculate relative position based on parallax
-        float relX = (float) ((planet.getCenterX() - camX) * parallaxFactor);
-        float relY = -SKYBOX_DISTANCE; // Render "below" the player
-        float relZ = (float) ((planet.getCenterZ() - camZ) * parallaxFactor);
+        PlanetExtras extras = Optional.ofNullable(Minecraft.getInstance().level).flatMap(DeepSpaceHelper::getExtrasForDimension).orElse(null);
 
         float prettyness = computePrettyness(planet, camY);
-        
-        relX = Mth.lerp(prettyness, relX, 0);
-        relZ = Mth.lerp(prettyness, relZ, 0);
-        
+
         // Determine quad size based on altitude and scale factor
         double trueSize = SkyDataHandler.toTrueSize(planet.getPowerSize());
         double optimalSize = camY * (2 << SkyDataHandler.SCALE_FACTOR);
         double result = Math.min(prettyness > 0 ? optimalSize : trueSize, SkyDataHandler.toTrueSize(SkyDataHandler.MAX_POWER_SIZE));
-        float size = (float) (result * (SKYBOX_DISTANCE / Math.max(100.0, camY)));
+        float parallaxFactor = (float) Math.min(SKYBOX_DISTANCE / Math.max(1, result), SKYBOX_DISTANCE / Math.max(1, Math.pow(2, SkyDataHandler.targetSizeForHeightContinuous(camY) + 1)));
+        float size = (float) (result * parallaxFactor);
+
+        // Calculate relative position based on parallax
+        float relX = (float) ((planet.getCenterX() - camX) * parallaxFactor);
+        float relY = -SKYBOX_DISTANCE / 8; // Render "below" the player
+        float relZ = (float) ((planet.getCenterZ() - camZ) * parallaxFactor);
+        
+        relX = Mth.lerp(prettyness, relX, 0);
+        relZ = Mth.lerp(prettyness, relZ, 0);
 
         // Setup rendering state
         RenderSystem.enableBlend();
@@ -171,38 +173,40 @@ public class SkyHandler {
         bufferbuilder.addVertex(matrix, relX + size, relY, relZ - size).setColor(r, g, b, visibility).setUv(1.0f, 0.0f);
         BufferUploader.drawWithShader(bufferbuilder.buildOrThrow());
 
-        // --- Layer 1.8: Cloud Shadows (Floating offset shadow) ---
-        double theta = 2.0 * Math.PI * celestialAngle;
-        float lx = (float) -Math.sin(theta);
-        if (CLOUD_TEXTURE_ID != null) {
-            RenderSystem.setShaderTexture(0, CLOUD_TEXTURE_ID);
-            long factor = 1000L * SkyDataHandler.toTrueSize(planet.getPowerSize() / 2);
-            float timeOffset = (System.currentTimeMillis() % (20L * factor)) / (float) factor;
-            
-            float shadowShift = lx * size * 0.08f; // Dynamic shadow offset based on solar angle
-            
-            BufferBuilder shadowBuilder = tesselator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
-            // Deep transparent dark space shadow color
-            float sr = 0.01f, sg = 0.02f, sb = 0.08f, sa = visibility * 0.48f;
-            shadowBuilder.addVertex(matrix, relX - size + shadowShift, relY, relZ - size).setColor(sr, sg, sb, sa).setUv(0.0f + timeOffset, 0.0f);
-            shadowBuilder.addVertex(matrix, relX - size + shadowShift, relY, relZ + size).setColor(sr, sg, sb, sa).setUv(0.0f + timeOffset, 1.0f);
-            shadowBuilder.addVertex(matrix, relX + size + shadowShift, relY, relZ + size).setColor(sr, sg, sb, sa).setUv(1.0f + timeOffset, 1.0f);
-            shadowBuilder.addVertex(matrix, relX + size + shadowShift, relY, relZ - size).setColor(sr, sg, sb, sa).setUv(1.0f + timeOffset, 0.0f);
-            BufferUploader.drawWithShader(shadowBuilder.buildOrThrow());
-        }
+        if (extras != null && extras.clouds()) {
+            // --- Layer 1.8: Cloud Shadows (Floating offset shadow) ---
+            double theta = 2.0 * Math.PI * celestialAngle;
+            float lx = (float) -Math.sin(theta);
+            if (CLOUD_TEXTURE_ID != null) {
+                RenderSystem.setShaderTexture(0, CLOUD_TEXTURE_ID);
+                long factor = 1000L * SkyDataHandler.toTrueSize(planet.getPowerSize() / 2);
+                float timeOffset = (System.currentTimeMillis() % (20L * factor)) / (float) factor;
 
-        // --- Layer 2: Scrolling Clouds ---
-        if (CLOUD_TEXTURE_ID != null) {
-            RenderSystem.setShaderTexture(0, CLOUD_TEXTURE_ID);
-            long factor = 1000L * SkyDataHandler.toTrueSize(planet.getPowerSize() / 2);
-            float timeOffset = (System.currentTimeMillis() % (20L * factor)) / (float) factor;
+                float shadowShift = lx * size * 0.08f; // Dynamic shadow offset based on solar angle
 
-            BufferBuilder cloudBuilder = tesselator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
-            cloudBuilder.addVertex(matrix, relX - size, relY, relZ - size).setColor(1.0f, 1.0f, 1.0f, visibility).setUv(0.0f + timeOffset, 0.0f);
-            cloudBuilder.addVertex(matrix, relX - size, relY, relZ + size).setColor(1.0f, 1.0f, 1.0f, visibility).setUv(0.0f + timeOffset, 1.0f);
-            cloudBuilder.addVertex(matrix, relX + size, relY, relZ + size).setColor(1.0f, 1.0f, 1.0f, visibility).setUv(1.0f + timeOffset, 1.0f);
-            cloudBuilder.addVertex(matrix, relX + size, relY, relZ - size).setColor(1.0f, 1.0f, 1.0f, visibility).setUv(1.0f + timeOffset, 0.0f);
-            BufferUploader.drawWithShader(cloudBuilder.buildOrThrow());
+                BufferBuilder shadowBuilder = tesselator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+                // Deep transparent dark space shadow color
+                float sr = 0.01f, sg = 0.02f, sb = 0.08f, sa = visibility * 0.48f;
+                shadowBuilder.addVertex(matrix, relX - size + shadowShift, relY, relZ - size).setColor(sr, sg, sb, sa).setUv(0.0f + timeOffset, 0.0f);
+                shadowBuilder.addVertex(matrix, relX - size + shadowShift, relY, relZ + size).setColor(sr, sg, sb, sa).setUv(0.0f + timeOffset, 1.0f);
+                shadowBuilder.addVertex(matrix, relX + size + shadowShift, relY, relZ + size).setColor(sr, sg, sb, sa).setUv(1.0f + timeOffset, 1.0f);
+                shadowBuilder.addVertex(matrix, relX + size + shadowShift, relY, relZ - size).setColor(sr, sg, sb, sa).setUv(1.0f + timeOffset, 0.0f);
+                BufferUploader.drawWithShader(shadowBuilder.buildOrThrow());
+            }
+
+            // --- Layer 2: Scrolling Clouds ---
+            if (CLOUD_TEXTURE_ID != null) {
+                RenderSystem.setShaderTexture(0, CLOUD_TEXTURE_ID);
+                long factor = 1000L * SkyDataHandler.toTrueSize(planet.getPowerSize() / 2);
+                float timeOffset = (System.currentTimeMillis() % (20L * factor)) / (float) factor;
+
+                BufferBuilder cloudBuilder = tesselator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+                cloudBuilder.addVertex(matrix, relX - size, relY, relZ - size).setColor(1.0f, 1.0f, 1.0f, visibility).setUv(0.0f + timeOffset, 0.0f);
+                cloudBuilder.addVertex(matrix, relX - size, relY, relZ + size).setColor(1.0f, 1.0f, 1.0f, visibility).setUv(0.0f + timeOffset, 1.0f);
+                cloudBuilder.addVertex(matrix, relX + size, relY, relZ + size).setColor(1.0f, 1.0f, 1.0f, visibility).setUv(1.0f + timeOffset, 1.0f);
+                cloudBuilder.addVertex(matrix, relX + size, relY, relZ - size).setColor(1.0f, 1.0f, 1.0f, visibility).setUv(1.0f + timeOffset, 0.0f);
+                BufferUploader.drawWithShader(cloudBuilder.buildOrThrow());
+            }
         }
 
         // --- Layer 2.5: Pixelated Light, Shadow & Atmospheric Crescent Glow Overlay ---

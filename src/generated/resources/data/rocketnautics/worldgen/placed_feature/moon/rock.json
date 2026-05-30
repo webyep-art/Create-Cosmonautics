@@ -21,7 +21,10 @@
       "type": "minecraft:block_predicate_filter",
       "predicate": {
         "type": "minecraft:matching_blocks",
-        "blocks": "rocketnautics:lunar_regolith",
+        "blocks": [
+          "rocketnautics:lunar_regolith",
+          "rocketnautics:lunar_aged_basalt"
+        ],
         "offset": [
           0,
           -1,

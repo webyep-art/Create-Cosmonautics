@@ -30,6 +30,7 @@ public class PlanetDefinitionBuilder {
     private int transferHeight = 20_000;
     private boolean renderUniverseInDimension = false;
     private String controlDimensionDayTimeLightSource;
+    private boolean applyGravityCorrectionToEntities;
 
     private @Nullable IntFunction<byte[]> renderDataOverride;
     private boolean clouds = false;
@@ -121,10 +122,10 @@ public class PlanetDefinitionBuilder {
         if (controlDimensionDayTimeLightSource != null) {
             FrameTree f = parent.getFrameByName(controlDimensionDayTimeLightSource);
             if (f != null) {
-                return new PlanetDimensionData(linkedDimension, transferHeight, renderUniverseInDimension, f.getId());
+                return new PlanetDimensionData(linkedDimension, transferHeight, renderUniverseInDimension, f.getId(), applyGravityCorrectionToEntities);
             }
         }
-        return new PlanetDimensionData(linkedDimension, transferHeight, renderUniverseInDimension);
+        return new PlanetDimensionData(linkedDimension, transferHeight, renderUniverseInDimension, applyGravityCorrectionToEntities);
     }
 
     protected PlanetExtras constructExtras() {
@@ -154,6 +155,11 @@ public class PlanetDefinitionBuilder {
 
     public PlanetDefinitionBuilder setControlDimensionDayTimeLightSource(String name) {
         this.controlDimensionDayTimeLightSource = name;
+        return this;
+    }
+
+    public PlanetDefinitionBuilder setApplyGravityCorrectionToEntities(boolean applyGravityCorrectionToEntities) {
+        this.applyGravityCorrectionToEntities = applyGravityCorrectionToEntities;
         return this;
     }
 

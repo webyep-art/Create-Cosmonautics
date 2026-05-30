@@ -65,11 +65,6 @@ public class UniverseDefinition {
         return tree.getInTreeByID(id).map(FrameTree::getOrekitFrame);
     }
 
-    public int getFrameIDByName(String name) {
-        Optional<FrameTree> frame = tree.getInTreeByName(name);
-        return frame.map(FrameTree::getId).orElse(-1);
-    }
-
     @NotNull
     public Optional<String> getFrameNameByID(int id) {
         Optional<FrameTree> frame = tree.getInTreeByID(id);

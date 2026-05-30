@@ -7,16 +7,12 @@ import net.minecraft.core.Vec3i;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.data.worldgen.BootstrapContext;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.util.valueproviders.UniformInt;
-import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.levelgen.VerticalAnchor;
 import net.minecraft.world.level.levelgen.blockpredicates.BlockPredicate;
 import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
 import net.minecraft.world.level.levelgen.heightproviders.TrapezoidHeight;
 import net.minecraft.world.level.levelgen.placement.*;
-import net.neoforged.neoforge.common.world.BiomeModifier;
-import net.neoforged.neoforge.registries.NeoForgeRegistries;
 
 import java.util.List;
 
@@ -24,6 +20,8 @@ public class PlacedFeatures {
     public static final ResourceKey<PlacedFeature> TITANIUM_ORE = register("titanium_ore");
     public static final ResourceKey<PlacedFeature> LUNAR_ROCK = register("moon/rock");
     public static final ResourceKey<PlacedFeature> LUNAR_MOSS = register("moon/moss");
+    public static final ResourceKey<PlacedFeature> SMALL_AGED_COLUMNS = register("moon/small_aged_columns");
+    public static final ResourceKey<PlacedFeature> LARGE_AGED_COLUMNS = register("moon/large_aged_columns");
     public static void bootstrap(BootstrapContext<PlacedFeature> context) {
         HolderGetter<ConfiguredFeature<?, ?>> features = context.lookup(Registries.CONFIGURED_FEATURE);
         context.register(TITANIUM_ORE, new PlacedFeature(
@@ -45,7 +43,7 @@ public class PlacedFeatures {
                         BiomeFilter.biome(),
                         BlockPredicateFilter.forPredicate(BlockPredicate.matchesBlocks(
                                 down,
-                                List.of(RocketBlocks.LUNAR_REGOLITH.get())
+                                List.of(RocketBlocks.LUNAR_REGOLITH.get(), RocketBlocks.LUNAR_AGED_BASALT.get())
                         ))
                 )
         ));
@@ -60,6 +58,20 @@ public class PlacedFeatures {
                                 down,
                                 List.of(RocketBlocks.LUNAR_LOOSE_REGOLITH.get())
                         ))
+                )
+        ));
+        context.register(SMALL_AGED_COLUMNS, new PlacedFeature(
+                features.getOrThrow(ConfiguredFeatures.SMALL_AGED_COLUMNS),
+                List.of(
+                        CountOnEveryLayerPlacement.of(4),
+                        BiomeFilter.biome()
+                )
+        ));
+        context.register(LARGE_AGED_COLUMNS, new PlacedFeature(
+                features.getOrThrow(ConfiguredFeatures.LARGE_AGED_COLUMNS),
+                List.of(
+                        CountOnEveryLayerPlacement.of(2),
+                        BiomeFilter.biome()
                 )
         ));
     }

@@ -1,5 +1,5 @@
 {
-  "dimension": "rocketnautics:deep_space",
+  "dimension": "rocketnautics:moon",
   "priority": 0,
   "universal_drag": 0.01,
   "base_gravity": [0, -2.0, 0],

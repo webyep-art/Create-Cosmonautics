@@ -25,7 +25,13 @@
       "y_scale": 0.5
     },
     "continents": "rocketnautics:moon/continents",
-    "depth": 0.0,
+    "depth": {
+      "type": "minecraft:y_clamped_gradient",
+      "from_value": 2.0,
+      "from_y": -64,
+      "to_value": -3.0,
+      "to_y": 256
+    },
     "erosion": "rocketnautics:moon/erosion",
     "final_density": {
       "type": "minecraft:add",
@@ -135,56 +141,103 @@
             "argument1": {
               "type": "minecraft:add",
               "argument1": {
-                "type": "minecraft:clamp",
-                "input": {
-                  "type": "minecraft:spline",
-                  "spline": {
-                    "coordinate": "rocketnautics:moon/ridges",
-                    "points": [
-                      {
-                        "derivative": 0.0,
-                        "location": -1.5,
-                        "value": -10.0
-                      },
-                      {
-                        "derivative": 0.0,
-                        "location": -1.1,
-                        "value": -5.0
-                      },
-                      {
-                        "derivative": 0.0,
-                        "location": -1.0,
-                        "value": 0.0
-                      }
-                    ]
-                  }
+                "type": "minecraft:add",
+                "argument1": {
+                  "type": "minecraft:clamp",
+                  "input": {
+                    "type": "minecraft:spline",
+                    "spline": {
+                      "coordinate": "rocketnautics:moon/ridges",
+                      "points": [
+                        {
+                          "derivative": 0.0,
+                          "location": -1.5,
+                          "value": -10.0
+                        },
+                        {
+                          "derivative": 0.0,
+                          "location": -1.1,
+                          "value": -5.0
+                        },
+                        {
+                          "derivative": 0.0,
+                          "location": -1.0,
+                          "value": 0.0
+                        }
+                      ]
+                    }
+                  },
+                  "max": 0.0,
+                  "min": -2.0
                 },
-                "max": 0.0,
-                "min": -2.0
+                "argument2": {
+                  "type": "minecraft:y_clamped_gradient",
+                  "from_value": 2.0,
+                  "from_y": -64,
+                  "to_value": -3.0,
+                  "to_y": 256
+                }
               },
               "argument2": {
-                "type": "minecraft:y_clamped_gradient",
-                "from_value": 2.0,
-                "from_y": -64,
-                "to_value": -3.0,
-                "to_y": 256
+                "type": "minecraft:add",
+                "argument1": "rocketnautics:moon/variance",
+                "argument2": {
+                  "type": "minecraft:mul",
+                  "argument1": {
+                    "type": "minecraft:square",
+                    "argument": {
+                      "type": "minecraft:mul",
+                      "argument1": {
+                        "type": "minecraft:clamp",
+                        "input": {
+                          "type": "minecraft:add",
+                          "argument1": {
+                            "type": "minecraft:add",
+                            "argument1": 0.6,
+                            "argument2": {
+                              "type": "minecraft:y_clamped_gradient",
+                              "from_value": 2.0,
+                              "from_y": -64,
+                              "to_value": -3.0,
+                              "to_y": 256
+                            }
+                          },
+                          "argument2": {
+                            "type": "minecraft:mul",
+                            "argument1": 0.6,
+                            "argument2": "rocketnautics:moon/variance"
+                          }
+                        },
+                        "max": 1.0,
+                        "min": 0.0
+                      },
+                      "argument2": "rocketnautics:moon/megaregolith"
+                    }
+                  },
+                  "argument2": {
+                    "type": "minecraft:clamp",
+                    "input": {
+                      "type": "minecraft:mul",
+                      "argument1": -60.0,
+                      "argument2": "rocketnautics:moon/continents"
+                    },
+                    "max": 0.0,
+                    "min": -3.0
+                  }
+                }
               }
             },
             "argument2": {
-              "type": "minecraft:add",
-              "argument1": "rocketnautics:moon/variance",
+              "type": "minecraft:mul",
+              "argument1": 5.0E-4,
               "argument2": {
-                "type": "minecraft:mul",
-                "argument1": 5.0E-4,
-                "argument2": {
-                  "type": "minecraft:shifted_noise",
-                  "noise": "rocketnautics:moon/jaggedness",
-                  "shift_x": 0.0,
-                  "shift_y": 0.0,
-                  "shift_z": "minecraft:shift_z",
-                  "xz_scale": 1.0,
-                  "y_scale": 0.0
-                }
+                "type": "minecraft:shifted_noise",
+                "noise": "rocketnautics:moon/jaggedness",
+                "shift_x": 0.0,
+                "shift_y": 0.0,
+                "shift_z": "minecraft:shift_z",
+                "xz_scale": 1.0,
+                "y_scale": 0.0
               }
             }
           }
@@ -320,7 +373,54 @@
               "to_y": 256
             }
           },
-          "argument2": "rocketnautics:moon/variance"
+          "argument2": {
+            "type": "minecraft:add",
+            "argument1": "rocketnautics:moon/variance",
+            "argument2": {
+              "type": "minecraft:mul",
+              "argument1": {
+                "type": "minecraft:square",
+                "argument": {
+                  "type": "minecraft:mul",
+                  "argument1": {
+                    "type": "minecraft:clamp",
+                    "input": {
+                      "type": "minecraft:add",
+                      "argument1": {
+                        "type": "minecraft:add",
+                        "argument1": 0.6,
+                        "argument2": {
+                          "type": "minecraft:y_clamped_gradient",
+                          "from_value": 2.0,
+                          "from_y": -64,
+                          "to_value": -3.0,
+                          "to_y": 256
+                        }
+                      },
+                      "argument2": {
+                        "type": "minecraft:mul",
+                        "argument1": 0.6,
+                        "argument2": "rocketnautics:moon/variance"
+                      }
+                    },
+                    "max": 1.0,
+                    "min": 0.0
+                  },
+                  "argument2": "rocketnautics:moon/megaregolith"
+                }
+              },
+              "argument2": {
+                "type": "minecraft:clamp",
+                "input": {
+                  "type": "minecraft:mul",
+                  "argument1": -60.0,
+                  "argument2": "rocketnautics:moon/continents"
+                },
+                "max": 0.0,
+                "min": -3.0
+              }
+            }
+          }
         }
       }
     },
@@ -566,6 +666,128 @@
                   "Name": "rocketnautics:lunar_regolith",
                   "Properties": {
                     "axis": "y"
+                  }
+                }
+              }
+            },
+            {
+              "type": "minecraft:block",
+              "result_state": {
+                "Name": "rocketnautics:lunar_aged_basalt",
+                "Properties": {
+                  "axis": "y"
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "type": "minecraft:condition",
+        "if_true": {
+          "type": "minecraft:biome",
+          "biome_is": [
+            "rocketnautics:lunar_megaregolith"
+          ]
+        },
+        "then_run": {
+          "type": "minecraft:sequence",
+          "sequence": [
+            {
+              "type": "minecraft:condition",
+              "if_true": {
+                "type": "minecraft:steep"
+              },
+              "then_run": {
+                "type": "minecraft:block",
+                "result_state": {
+                  "Name": "rocketnautics:lunar_aged_basalt",
+                  "Properties": {
+                    "axis": "y"
+                  }
+                }
+              }
+            },
+            {
+              "type": "minecraft:condition",
+              "if_true": {
+                "type": "minecraft:stone_depth",
+                "add_surface_depth": true,
+                "offset": 0,
+                "secondary_depth_range": 0,
+                "surface_type": "floor"
+              },
+              "then_run": {
+                "type": "minecraft:sequence",
+                "sequence": [
+                  {
+                    "type": "minecraft:condition",
+                    "if_true": {
+                      "type": "minecraft:noise_threshold",
+                      "max_threshold": 2.0,
+                      "min_threshold": 0.6,
+                      "noise": "rocketnautics:moon/jaggedness"
+                    },
+                    "then_run": {
+                      "type": "minecraft:block",
+                      "result_state": {
+                        "Name": "rocketnautics:lunar_loose_regolith"
+                      }
+                    }
+                  },
+                  {
+                    "type": "minecraft:condition",
+                    "if_true": {
+                      "type": "minecraft:noise_threshold",
+                      "max_threshold": -0.6,
+                      "min_threshold": -2.0,
+                      "noise": "rocketnautics:moon/jaggedness"
+                    },
+                    "then_run": {
+                      "type": "minecraft:block",
+                      "result_state": {
+                        "Name": "rocketnautics:lunar_regolith",
+                        "Properties": {
+                          "axis": "y"
+                        }
+                      }
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "type": "minecraft:condition",
+              "if_true": {
+                "type": "minecraft:noise_threshold",
+                "max_threshold": 2.0,
+                "min_threshold": 0.4,
+                "noise": "rocketnautics:moon/jaggedness"
+              },
+              "then_run": {
+                "type": "minecraft:block",
+                "result_state": {
+                  "Name": "rocketnautics:lunar_aged_basalt",
+                  "Properties": {
+                    "axis": "x"
+                  }
+                }
+              }
+            },
+            {
+              "type": "minecraft:condition",
+              "if_true": {
+                "type": "minecraft:noise_threshold",
+                "max_threshold": -0.4,
+                "min_threshold": -2.0,
+                "noise": "rocketnautics:moon/jaggedness"
+              },
+              "then_run": {
+                "type": "minecraft:block",
+                "result_state": {
+                  "Name": "rocketnautics:lunar_aged_basalt",
+                  "Properties": {
+                    "axis": "z"
                   }
                 }
               }

@@ -1,8 +1,5 @@
 {
   "values": [
-    "rocketnautics:lunar_regolith",
-    "rocketnautics:lunar_loose_regolith",
-    "rocketnautics:lunar_aged_basalt",
-    "minecraft:basalt"
+    "#rocketnautics:generic_carvable"
   ]
 }

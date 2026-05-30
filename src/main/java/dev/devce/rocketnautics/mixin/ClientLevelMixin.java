@@ -2,8 +2,6 @@ package dev.devce.rocketnautics.mixin;
 
 import dev.devce.rocketnautics.api.orbit.DeepSpaceHelper;
 import dev.devce.rocketnautics.client.DeepSpaceHandler;
-import dev.devce.rocketnautics.content.orbit.universe.CubePlanet;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.Holder;
 import net.minecraft.core.RegistryAccess;
@@ -42,7 +40,7 @@ public abstract class ClientLevelMixin extends Level {
             cir.setReturnValue(new Vec3(0, 0, 0));
             return;
         }
-        if (DeepSpaceHandler.getUniverse() != null && DeepSpaceHelper.shouldOverrideLevelTime(DeepSpaceHandler.getUniverse(), this)) {
+        if (DeepSpaceHandler.getUniverse() != null && DeepSpaceHelper.shouldOverrideLevelTime(this)) {
             cir.setReturnValue(new Vec3(0, 0, 0));
             return;
         }
@@ -65,7 +63,7 @@ public abstract class ClientLevelMixin extends Level {
     @Inject(method = "setDayTime", at = @At("HEAD"), cancellable = true)
     private void cancelSetDayTime(long p_104747_, CallbackInfo ci) {
         if (DeepSpaceHandler.getUniverse() == null) return;
-        if (DeepSpaceHelper.shouldOverrideLevelTime(DeepSpaceHandler.getUniverse(), this)) {
+        if (DeepSpaceHelper.shouldOverrideLevelTime(this)) {
             ci.cancel();
         }
     }

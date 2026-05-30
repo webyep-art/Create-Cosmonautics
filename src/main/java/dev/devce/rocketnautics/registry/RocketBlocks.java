@@ -14,14 +14,14 @@ import dev.devce.rocketnautics.content.blocks.world.RockBlock;
 import dev.simulated_team.simulated.registrate.SimulatedRegistrate;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.data.recipes.RecipeCategory;
+import net.minecraft.data.recipes.ShapedRecipeBuilder;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.util.ColorRGBA;
 import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.Enchantments;
-import net.minecraft.data.recipes.RecipeCategory;
-import net.minecraft.data.recipes.ShapedRecipeBuilder;
-import net.minecraft.world.item.Items;
 import net.minecraft.world.level.ItemLike;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.BlockBehaviour;
@@ -32,11 +32,10 @@ import net.neoforged.neoforge.common.Tags;
 import org.jspecify.annotations.NonNull;
 
 import java.util.Map;
-import java.util.function.Supplier;
 
 import static com.simibubi.create.foundation.data.TagGen.pickaxeOnly;
 import static com.simibubi.create.foundation.data.TagGen.tagBlockAndItem;
-import static dev.devce.rocketnautics.registry.RocketTags.BlockTags.*;
+import static dev.devce.rocketnautics.registry.RocketTags.BlockTags.GENERIC_CARVABLE;
 
 public class RocketBlocks {
     private static final SimulatedRegistrate REGISTRATE = RocketNautics.getRegistrate();
@@ -160,7 +159,7 @@ public class RocketBlocks {
             .initialProperties(() -> Blocks.NETHERRACK)
             .properties(p -> p.mapColor(MapColor.STONE))
             .loot((tables, block) -> tables.add(block, tables.createSingleItemTableWithSilkTouch(block, RocketBlocks.LUNAR_SHATTERED_REGOLITH)))
-            .tag(RILLE_CARVABLE.tag, CRATER_CARVABLE.tag)
+            .tag(GENERIC_CARVABLE.tag)
             .transform(pickaxeOnly())
             .recipe((ctx, prov) -> prov.smeltingAndBlasting(DataIngredient.items((ItemLike) RocketBlocks.LUNAR_SHATTERED_REGOLITH), RecipeCategory.BUILDING_BLOCKS, ctx::getEntry, 1f))
             .blockstate((ctx, prov) -> prov.axisBlock(ctx.getEntry()))
@@ -210,7 +209,7 @@ public class RocketBlocks {
     public static final BlockEntry<ColoredFallingBlock> LUNAR_LOOSE_REGOLITH = REGISTRATE.block("lunar_loose_regolith", p -> new ColoredFallingBlock(new ColorRGBA(-8356741), p))
             .initialProperties(() -> Blocks.GRAVEL)
             .properties(p -> p.mapColor(MapColor.STONE))
-            .tag(RILLE_CARVABLE.tag, CRATER_CARVABLE.tag)
+            .tag(GENERIC_CARVABLE.tag)
             .transform(pickaxeOnly())
             .item().build()
             .register();
@@ -242,7 +241,7 @@ public class RocketBlocks {
     public static final BlockEntry<RotatedPillarBlock> LUNAR_AGED_BASALT = REGISTRATE.block("lunar_aged_basalt", RotatedPillarBlock::new)
             .initialProperties(() -> Blocks.BASALT)
             .transform(pickaxeOnly())
-            .tag(RILLE_CARVABLE.tag, CRATER_CARVABLE.tag)
+            .tag(GENERIC_CARVABLE.tag)
             .blockstate((ctx, prov) -> prov.axisBlock(ctx.getEntry()))
             .item().build()
             .register();

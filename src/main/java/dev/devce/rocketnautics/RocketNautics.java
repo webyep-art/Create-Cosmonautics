@@ -7,7 +7,6 @@ import com.simibubi.create.foundation.item.TooltipHelper;
 import com.simibubi.create.foundation.item.TooltipModifier;
 import com.tterrag.registrate.util.nullness.NonNullSupplier;
 import dev.devce.rocketnautics.compat.computercraft.ComputerCraftCompat;
-import dev.devce.rocketnautics.content.blocks.LinkedSignalHandler;
 import dev.devce.rocketnautics.content.commands.GravityCommand;
 import dev.devce.rocketnautics.content.commands.JetpackCommand;
 import dev.devce.rocketnautics.content.commands.ShipCopyPasteCommand;
@@ -16,6 +15,7 @@ import dev.devce.rocketnautics.content.physics.GlobalSpacePhysicsHandler;
 import dev.devce.rocketnautics.data.RocketDatagen;
 import dev.devce.rocketnautics.network.NetworkHandler;
 import dev.devce.rocketnautics.registry.*;
+import dev.devce.websnodelib.internal.InternalNodes;
 import dev.simulated_team.simulated.util.SimColors;
 import net.createmod.catnip.lang.FontHelper;
 import net.minecraft.resources.ResourceKey;
@@ -24,7 +24,6 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Rarity;
 import net.minecraft.world.level.Level;
-import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModList;
@@ -35,7 +34,6 @@ import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.level.LevelEvent;
-import dev.devce.websnodelib.internal.InternalNodes;
 import net.neoforged.neoforge.event.tick.LevelTickEvent;
 import org.slf4j.Logger;
 
@@ -68,7 +66,8 @@ public class RocketNautics {
 
         RocketDensityFunctions.register(modEventBus);
         RocketFloatProviders.register(modEventBus);
-        RocketCarvers.register(modEventBus);
+        RocketWorldCarvers.register(modEventBus);
+        RocketFeatures.register(modEventBus);
 
         modEventBus.addListener(RocketDatagen::gatherData);
 

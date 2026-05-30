@@ -5,10 +5,10 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.Level;
 
-public record PlanetDimensionData(ResourceKey<Level> key, int transitionHeight, boolean renderUniverseInDimension, int controlDimensionDayTimeID) {
+public record PlanetDimensionData(ResourceKey<Level> key, int transitionHeight, boolean renderUniverseInDimension, int controlDimensionDayTimeID, boolean applyGravityCorrectionToEntities) {
 
-    public PlanetDimensionData(ResourceKey<Level> key, int transitionHeight, boolean renderUniverseInDimension) {
-        this(key, transitionHeight, renderUniverseInDimension, -1);
+    public PlanetDimensionData(ResourceKey<Level> key, int transitionHeight, boolean renderUniverseInDimension, boolean applyGravityCorrectionToEntities) {
+        this(key, transitionHeight, renderUniverseInDimension, -1, applyGravityCorrectionToEntities);
     }
 
     public boolean controlsDimensionDayTime() {
@@ -20,6 +20,7 @@ public record PlanetDimensionData(ResourceKey<Level> key, int transitionHeight, 
         buf.writeVarInt(transitionHeight);
         buf.writeBoolean(renderUniverseInDimension);
         buf.writeVarInt(controlDimensionDayTimeID);
+        buf.writeBoolean(applyGravityCorrectionToEntities);
     }
 
     public static PlanetDimensionData read(FriendlyByteBuf buf) {
@@ -27,6 +28,7 @@ public record PlanetDimensionData(ResourceKey<Level> key, int transitionHeight, 
         int transitionHeight = buf.readVarInt();
         boolean renderUniverseInDimension = buf.readBoolean();
         int controlDimensionDayTimeID = buf.readVarInt();
-        return new PlanetDimensionData(key, transitionHeight, renderUniverseInDimension, controlDimensionDayTimeID);
+        boolean applyGravityCorrectionToEntities = buf.readBoolean();
+        return new PlanetDimensionData(key, transitionHeight, renderUniverseInDimension, controlDimensionDayTimeID, applyGravityCorrectionToEntities);
     }
 }

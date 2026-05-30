@@ -18,7 +18,10 @@ import it.unimi.dsi.fastutil.ints.IntObjectPair;
 import net.minecraft.Util;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.*;
+import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderStateShard;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
@@ -701,7 +704,7 @@ public final class DeepSpaceHandler {
         poseStack.pushPose();
         AbsoluteDate date = getPredictedUniverseDate(partialTick);
         var globalCoords = DeepSpaceHelper.localPositionToGlobalPositionAndRotation(position.toVector3f().get(new Vector3d()), null, planet, date);
-        poseStack.mulPose(DeepSpaceHelper.adapt(globalCoords.second()).get(new Quaternionf()));
+        poseStack.mulPose(DeepSpaceHelper.adapt(globalCoords.second()).get(new Quaternionf()).conjugate());
         renderUniverse(planet, poseStack, null, partialDelta, partialTick, date, globalCoords.first().getPosition(), planet.orekitFrame(), camera);
         poseStack.popPose();
     }

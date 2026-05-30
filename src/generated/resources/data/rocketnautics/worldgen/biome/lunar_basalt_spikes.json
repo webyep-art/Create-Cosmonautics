@@ -1,5 +1,10 @@
 {
-  "carvers": {},
+  "carvers": {
+    "air": [
+      "rocketnautics:moon/canyon",
+      "rocketnautics:moon/maria_caves"
+    ]
+  },
   "downfall": 0.0,
   "effects": {
     "fog_color": 14606046,
@@ -7,7 +12,12 @@
     "water_color": 12242144,
     "water_fog_color": 12242144
   },
-  "features": [],
+  "features": [
+    [
+      "minecraft:small_basalt_columns",
+      "minecraft:large_basalt_columns"
+    ]
+  ],
   "has_precipitation": false,
   "spawn_costs": {},
   "spawners": {

@@ -5,7 +5,9 @@ import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.llamalad7.mixinextras.sugar.Local;
 import dev.devce.rocketnautics.api.orbit.DeepSpaceHelper;
 import dev.devce.rocketnautics.content.orbit.DeepSpaceData;
+import dev.devce.rocketnautics.content.orbit.universe.PlanetDimensionData;
 import dev.devce.rocketnautics.content.physics.GlobalSpacePhysicsHandler;
+import dev.ryanhcode.sable.physics.config.dimension_physics.DimensionPhysicsData;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
@@ -35,6 +37,11 @@ public abstract class EntityMixin {
 
     @ModifyReturnValue(method = "getGravity", at = @At("RETURN"))
     private double rocketnautics$applyLowGravity(double original) {
+        if (DeepSpaceHelper.getDataForDimension(level()).map(PlanetDimensionData::applyGravityCorrectionToEntities).orElse(false)) {
+            double gravity = DimensionPhysicsData.getGravity(level()).y();
+            double normalGravity = -11f;
+            original *= gravity / normalGravity;
+        }
         return original * (1 - GlobalSpacePhysicsHandler.calculateGravityFactor(level(), getY()));
     }
 

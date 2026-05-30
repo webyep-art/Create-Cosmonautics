@@ -4,9 +4,9 @@ import com.tterrag.registrate.providers.ProviderType;
 import dev.devce.rocketnautics.RocketNautics;
 import dev.devce.rocketnautics.data.recipe.*;
 import dev.devce.rocketnautics.data.worldgen.*;
-import dev.devce.rocketnautics.data.worldgen.noise.NoiseData;
-import dev.devce.rocketnautics.data.worldgen.noise.NoiseRouterData;
-import dev.devce.rocketnautics.data.worldgen.noise.NoiseGenSettings;
+import dev.devce.rocketnautics.data.worldgen.noise.RocketNoiseData;
+import dev.devce.rocketnautics.data.worldgen.noise.RocketNoiseGenSettings;
+import dev.devce.rocketnautics.data.worldgen.noise.RocketNoiseRouterData;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.RegistrySetBuilder;
 import net.minecraft.core.registries.Registries;
@@ -42,10 +42,10 @@ public class RocketDatagen {
         registry.add(NeoForgeRegistries.Keys.BIOME_MODIFIERS, BiomeModifiers::bootstrap);
         registry.add(Registries.PLACED_FEATURE, PlacedFeatures::bootstrap);
         registry.add(Registries.CONFIGURED_FEATURE, ConfiguredFeatures::bootstrap);
-        registry.add(Registries.NOISE_SETTINGS, NoiseGenSettings::bootstrap);
-        registry.add(Registries.NOISE, NoiseData::bootstrap);
-        registry.add(Registries.DENSITY_FUNCTION, NoiseRouterData::bootstrap);
-        registry.add(Registries.CONFIGURED_CARVER, Carvers::bootstrap);
+        registry.add(Registries.NOISE_SETTINGS, RocketNoiseGenSettings::bootstrap);
+        registry.add(Registries.NOISE, RocketNoiseData::bootstrap);
+        registry.add(Registries.DENSITY_FUNCTION, RocketNoiseRouterData::bootstrap);
+        registry.add(Registries.CONFIGURED_CARVER, RocketCarvers::bootstrap);
         event.createDatapackRegistryObjects(registry);
     }
 }

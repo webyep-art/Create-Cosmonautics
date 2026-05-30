@@ -66,7 +66,7 @@ public final class PlanetColors {
         // moon
         setBiomeColor(RocketTags.BiomeTags.LUNAR_CHASM.tag, 220, 150, 70);
         setBiomeColor(RocketTags.BiomeTags.LUNAR_HIGHLANDS.tag, 190, 190, 190);
-        setBiomeColor(RocketTags.BiomeTags.LUNAR_MARIA.tag, 110, 110, 110);
+        setBiomeColor(RocketTags.BiomeTags.LUNAR_MARIA.tag, 90, 90, 90);
 
         // mars
         MARS_RED = addColor(185, 80, 45);

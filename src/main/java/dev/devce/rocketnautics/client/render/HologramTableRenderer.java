@@ -159,6 +159,7 @@ public class HologramTableRenderer extends SafeBlockEntityRenderer<HologramTable
         int count = 0;
         if (iter.hasNext()) {
             Vector3D v = iter.next().scalarMultiply(scaleFactor);
+            Vector3D norm = null;
             while (iter.hasNext()) {
                 Vector3D vNext = iter.next().scalarMultiply(scaleFactor);
                 if (stopCondition.test(v)) {
@@ -173,7 +174,13 @@ public class HologramTableRenderer extends SafeBlockEntityRenderer<HologramTable
                     cycling2.add(new Vector3D(partialCycle, vNext, 1 - partialCycle, v));
                 }
                 count++;
-                Vector3D norm = vNext.subtract(v).normalize();
+                Vector3D dif = vNext.subtract(v);
+                if (dif.getNormSq() > 1e-20) {
+                    norm = dif.normalize();
+                } else if (norm == null) {
+                    v = vNext;
+                    continue;
+                }
                 buffer.addVertex(ms.last(), (float) v.getX(), (float) v.getY(), (float) v.getZ())
                         .setColor(0.8f, 0.8f, b, 0.8f)
                         .setNormal(ms.last(), (float) norm.getX(), (float) norm.getY(), (float) norm.getZ());

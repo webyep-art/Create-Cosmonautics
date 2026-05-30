@@ -16,7 +16,7 @@ import net.minecraft.world.level.levelgen.synth.NormalNoise;
 
 import java.util.List;
 
-public class NoiseGenSettings {
+public class RocketNoiseGenSettings {
     public static final ResourceKey<NoiseGeneratorSettings> MOON_GENERATOR = register("moon");
 
     public static void bootstrap(BootstrapContext<NoiseGeneratorSettings> context) {
@@ -26,7 +26,7 @@ public class NoiseGenSettings {
                 NoiseSettings.create(-64, 384, 1, 2),
                 RocketBlocks.LUNAR_AGED_BASALT.getDefaultState(),
                 Blocks.MAGMA_BLOCK.defaultBlockState(),
-                NoiseRouterData.moon(noises, densities),
+                RocketNoiseRouterData.moon(noises, densities),
                 SurfaceRules.sequence(
                         SurfaceRules.ifTrue(SurfaceRules.verticalGradient("bedrock_floor", VerticalAnchor.bottom(), VerticalAnchor.aboveBottom(5)), SurfaceRules.state(Blocks.BEDROCK.defaultBlockState())),
                         SurfaceRules.ifTrue(
@@ -44,7 +44,7 @@ public class NoiseGenSettings {
                                                                 SurfaceRules.ifTrue(
                                                                         SurfaceRules.not(SurfaceRules.stoneDepthCheck(1, false, 5, CaveSurface.FLOOR)),
                                                                         SurfaceRules.ifTrue(
-                                                                                SurfaceRules.noiseCondition(NoiseData.MOON_JAGGEDNESS, -0.5, 0.5),
+                                                                                SurfaceRules.noiseCondition(RocketNoiseData.MOON_JAGGEDNESS, -0.5, 0.5),
                                                                                 SurfaceRules.state(Blocks.LAVA.defaultBlockState())
                                                                         )
                                                                 )
@@ -57,7 +57,7 @@ public class NoiseGenSettings {
                                                 SurfaceRules.state(Blocks.BASALT.defaultBlockState())
                                         ),
                                         SurfaceRules.ifTrue(
-                                                SurfaceRules.noiseCondition(NoiseData.MOON_EROSION, 0, 2),
+                                                SurfaceRules.noiseCondition(RocketNoiseData.MOON_EROSION, 0, 2),
                                                 SurfaceRules.state(Blocks.BASALT.defaultBlockState().setValue(RotatedPillarBlock.AXIS, Direction.Axis.X))
                                         ),
                                         SurfaceRules.state(Blocks.BASALT.defaultBlockState().setValue(RotatedPillarBlock.AXIS, Direction.Axis.Z))
@@ -75,13 +75,44 @@ public class NoiseGenSettings {
                                         SurfaceRules.ifTrue(
                                                 SurfaceRules.stoneDepthCheck(-3, false, 11, CaveSurface.FLOOR),
                                                 SurfaceRules.ifTrue(
-                                                        SurfaceRules.noiseCondition(NoiseData.MOON_JAGGEDNESS, -0.6, 0.6),
+                                                        SurfaceRules.noiseCondition(RocketNoiseData.MOON_JAGGEDNESS, -0.6, 0.6),
                                                         SurfaceRules.state(RocketBlocks.LUNAR_LOOSE_REGOLITH.getDefaultState())
                                                 )
                                         ),
                                         SurfaceRules.ifTrue(
                                                 SurfaceRules.stoneDepthCheck(10, true, 20, CaveSurface.FLOOR),
                                                 SurfaceRules.state(RocketBlocks.LUNAR_REGOLITH.getDefaultState())
+                                        ),
+                                        SurfaceRules.state(RocketBlocks.LUNAR_AGED_BASALT.getDefaultState())
+                                )
+                        ),
+                        SurfaceRules.ifTrue(
+                                SurfaceRules.isBiome(RocketBiomes.LUNAR_MEGAREGOLITH),
+                                SurfaceRules.sequence(
+                                        SurfaceRules.ifTrue(
+                                                SurfaceRules.steep(),
+                                                SurfaceRules.state(RocketBlocks.LUNAR_AGED_BASALT.getDefaultState())
+                                        ),
+                                        SurfaceRules.ifTrue(
+                                                SurfaceRules.stoneDepthCheck(0, true, 0, CaveSurface.FLOOR),
+                                                SurfaceRules.sequence(
+                                                        SurfaceRules.ifTrue(
+                                                                SurfaceRules.noiseCondition(RocketNoiseData.MOON_JAGGEDNESS, 0.6, 2),
+                                                                SurfaceRules.state(RocketBlocks.LUNAR_LOOSE_REGOLITH.getDefaultState())
+                                                        ),
+                                                        SurfaceRules.ifTrue(
+                                                                SurfaceRules.noiseCondition(RocketNoiseData.MOON_JAGGEDNESS, -2, -0.6),
+                                                                SurfaceRules.state(RocketBlocks.LUNAR_REGOLITH.getDefaultState())
+                                                        )
+                                                )
+                                        ),
+                                        SurfaceRules.ifTrue(
+                                                SurfaceRules.noiseCondition(RocketNoiseData.MOON_JAGGEDNESS, 0.4, 2),
+                                                SurfaceRules.state(RocketBlocks.LUNAR_AGED_BASALT.getDefaultState().setValue(RotatedPillarBlock.AXIS, Direction.Axis.X))
+                                        ),
+                                        SurfaceRules.ifTrue(
+                                                SurfaceRules.noiseCondition(RocketNoiseData.MOON_JAGGEDNESS, -2, -0.4),
+                                                SurfaceRules.state(RocketBlocks.LUNAR_AGED_BASALT.getDefaultState().setValue(RotatedPillarBlock.AXIS, Direction.Axis.Z))
                                         ),
                                         SurfaceRules.state(RocketBlocks.LUNAR_AGED_BASALT.getDefaultState())
                                 )

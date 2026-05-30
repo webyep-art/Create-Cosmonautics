@@ -1,0 +1,12 @@
+{
+  "values": [
+    {
+      "id": "rocketnautics:lunar_aged_chasm",
+      "required": false
+    },
+    {
+      "id": "rocketnautics:lunar_basalt_chasm",
+      "required": false
+    }
+  ]
+}

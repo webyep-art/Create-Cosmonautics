@@ -109,7 +109,7 @@ public final class StandardUniverseProvider {
         final int overworldOrbitalYearInOverworldDays = 72 * 7; // one real-life week. Balance between a shorter time and having a large sphere of influence.
         final int overworldDaynightCycleLengthTicks = 24_000;
         final int overworldDaynightCycleLengthSeconds = 1200;
-        final int lunarMonthInOverworldDays = 8;
+        final int lunarMonthInOverworldDays = 8 * 3; // 8 real-life hours
         final double overworldDistance = solRadius * 40 / 3; // roughly based on the angular size of the sun in the overworld
         // orbit duration in seconds = 2pi * sqrt(r^3 / mu)
         // mu = r^3 * (2pi / orbit duration in seconds)^2
@@ -153,9 +153,11 @@ public final class StandardUniverseProvider {
                         .setDimensionTransferHeight(20000)
                         .setRenderUniverseInDimension(true)
                         .setControlDimensionDayTimeLightSource("sol")
+                        .setApplyGravityCorrectionToEntities(true)
                         .setAccelerationAtSurface(2)
                         .setCircularOrbit("overworld", lunarMonthInOverworldDays * overworldDaynightCycleLengthSeconds, Vector3D.PLUS_J)
-                        .radiusFromDistance(d -> (d - overworldRadius) * 3 / 40) // roughly based on the angular size of the moon in the overworld
+                        .setRadius(overworldRadius / 4)
+//                        .radiusFromDistance(d -> (d - overworldRadius) * 3 / 40) // roughly based on the angular size of the moon in the overworld
                         .setTidalLocked());
     }
 }

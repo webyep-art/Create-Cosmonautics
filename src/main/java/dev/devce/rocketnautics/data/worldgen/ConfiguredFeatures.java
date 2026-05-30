@@ -1,22 +1,22 @@
 package dev.devce.rocketnautics.data.worldgen;
 
 import dev.devce.rocketnautics.RocketNautics;
-import dev.devce.rocketnautics.data.worldgen.noise.NoiseData;
 import dev.devce.rocketnautics.registry.RocketBlocks;
+import dev.devce.rocketnautics.registry.RocketFeatures;
 import it.unimi.dsi.fastutil.doubles.DoubleList;
 import net.minecraft.core.HolderGetter;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.data.worldgen.BootstrapContext;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.tags.BlockTags;
+import net.minecraft.util.valueproviders.ConstantInt;
+import net.minecraft.util.valueproviders.UniformInt;
 import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
 import net.minecraft.world.level.levelgen.feature.Feature;
-import net.minecraft.world.level.levelgen.feature.configurations.FeatureConfiguration;
+import net.minecraft.world.level.levelgen.feature.configurations.ColumnFeatureConfiguration;
 import net.minecraft.world.level.levelgen.feature.configurations.OreConfiguration;
 import net.minecraft.world.level.levelgen.feature.configurations.SimpleBlockConfiguration;
-import net.minecraft.world.level.levelgen.feature.stateproviders.BlockStateProvider;
 import net.minecraft.world.level.levelgen.feature.stateproviders.NoiseProvider;
-import net.minecraft.world.level.levelgen.placement.PlacedFeature;
 import net.minecraft.world.level.levelgen.structure.templatesystem.TagMatchTest;
 import net.minecraft.world.level.levelgen.synth.NormalNoise;
 
@@ -26,6 +26,8 @@ public class ConfiguredFeatures {
     public static final ResourceKey<ConfiguredFeature<?, ?>> TITANIUM_ORE = register("titanium_ore");
     public static final ResourceKey<ConfiguredFeature<?, ?>> LUNAR_ROCK = register("moon/rock");
     public static final ResourceKey<ConfiguredFeature<?, ?>> LUNAR_MOSS = register("moon/moss");
+    public static final ResourceKey<ConfiguredFeature<?, ?>> SMALL_AGED_COLUMNS = register("moon/small_aged_columns");
+    public static final ResourceKey<ConfiguredFeature<?, ?>> LARGE_AGED_COLUMNS = register("moon/large_aged_columns");
     public static void bootstrap(BootstrapContext<ConfiguredFeature<?, ?>> context) {
         context.register(TITANIUM_ORE, new ConfiguredFeature<>(
                 Feature.ORE,
@@ -59,6 +61,14 @@ public class ConfiguredFeatures {
                                 List.of(RocketBlocks.LUNAR_MOSS_SCRAGGLY.getDefaultState(), RocketBlocks.LUNAR_MOSS_SHORT.getDefaultState(), RocketBlocks.LUNAR_MOSS_STIFF.getDefaultState())
                         )
                 )
+        ));
+        context.register(SMALL_AGED_COLUMNS, new ConfiguredFeature<>(
+                RocketFeatures.AGED_COLUMNS.get(),
+                new ColumnFeatureConfiguration(ConstantInt.of(1), UniformInt.of(1, 4))
+        ));
+        context.register(LARGE_AGED_COLUMNS, new ConfiguredFeature<>(
+                RocketFeatures.AGED_COLUMNS.get(),
+                new ColumnFeatureConfiguration(UniformInt.of(2, 3), UniformInt.of(5, 10))
         ));
     }
 
