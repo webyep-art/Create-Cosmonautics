@@ -111,6 +111,23 @@ public class RocketBlocks {
             .build()
             .register();
 
+    public static final BlockEntry<dev.devce.rocketnautics.content.blocks.parachute.ParachuteCaseBlock> PARACHUTE_CASE = REGISTRATE.block("parachute_case", dev.devce.rocketnautics.content.blocks.parachute.ParachuteCaseBlock::new)
+            .initialProperties(() -> Blocks.IRON_BLOCK)
+            .properties(BlockBehaviour.Properties::noOcclusion)
+            .transform(pickaxeOnly())
+            .blockstate((ctx, prov) -> {})
+            .item(RocketBlockItem::new)
+            .transform(RocketItems.noGeneratedModel())
+            .build()
+            .register();
+
+    public static final BlockEntry<Block> PARACHUTE_CAPSULE = REGISTRATE.block("parachute_capsule", Block::new)
+            .initialProperties(() -> Blocks.IRON_BLOCK)
+            .properties(BlockBehaviour.Properties::noOcclusion)
+            .transform(pickaxeOnly())
+            .transform(existingSimpleModel("parachutecapsule"))
+            .register();
+
     static { REGISTRATE.setCreativeTab(RocketTabs.WORLD_TAB); }
 
     public static final BlockEntry<Block> TITANIUM_ORE = REGISTRATE.block("titanium_ore", Block::new)

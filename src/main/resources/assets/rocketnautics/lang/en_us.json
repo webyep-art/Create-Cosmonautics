@@ -65,6 +65,12 @@
   "item.rocketnautics.copper_anchor_boots.tooltip.summary": "For those who find gravity a desperately missed friend. Or would like to use stairs.",
   "item.rocketnautics.copper_anchor_boots.tooltip.condition1": "When Worn",
   "item.rocketnautics.copper_anchor_boots.tooltip.behaviour1": "Provides _weak gravity_ when standing on a block. Allows _walking around_ as if _grounded_. Also acts like _Copper Diving Boots_.",
+  "block.rocketnautics.parachute_case": "Parachute Case",
+  "block.rocketnautics.parachute_case.funny": "Deploy with Redstone to slow down your inevitable crash.",
+  "block.rocketnautics.parachute_case.summary": "Automatically deploys a parachute when receiving a Redstone signal.",
+  "block.rocketnautics.parachute_capsule": "Parachute Capsule",
+  "block.rocketnautics.parachute_capsule.funny": "Protects and holds the parachute package until deployment.",
+  "block.rocketnautics.parachute_capsule.summary": "A compact capsule designed to safely store a parachute before launch.",
 
   "block.rocketnautics.titanium_ore": "Titanium Ore",
   "block.rocketnautics.titanium_ore.funny": "The backbone of your future failed space missions.",

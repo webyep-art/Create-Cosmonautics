@@ -1,0 +1,25 @@
+{
+	"format_version": "1.9.0",
+	"credit": "Made with Blockbench",
+	"parent": "minecraft:block/block",
+	"texture_size": [64, 64],
+	"textures": {
+		"0": "rocketnautics:block/parachutecapsule",
+		"particle": "rocketnautics:block/parachutecapsule"
+	},
+	"elements": [
+		{
+			"from": [3, 3, 3],
+			"to": [13, 6, 13],
+			"rotation": {"angle": 0, "axis": "y", "origin": [0, 3, 0]},
+			"faces": {
+				"north": {"uv": [6.5, 1.5, 9, 2.25], "texture": "#0"},
+				"east": {"uv": [6.5, 2.25, 9, 3], "texture": "#0"},
+				"south": {"uv": [6.5, 3, 9, 3.75], "texture": "#0"},
+				"west": {"uv": [6.5, 3.75, 9, 4.5], "texture": "#0"},
+				"up": {"uv": [6.5, 2.5, 4, 0], "texture": "#0"},
+				"down": {"uv": [6.5, 2.5, 4, 5], "texture": "#0"}
+			}
+		}
+	]
+}
